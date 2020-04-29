@@ -32,14 +32,14 @@ export function TimeEntryCard(props: { countStart: any; active: boolean }) {
     setDisplayValue(date.toISOString().substr(11, 8));
   }, [count]);
 
-  let [delay, setDelay] = useState(1000);
+  //let [delay, setDelay] = useState(1000);
 
   useInterval(() => {
     // Your custom logic here
     if (props.active) {
       setCount(count + 1);
     }
-  }, delay);
+  }, 1000);
 
   /*function handleDelayChange(e: { target: { value: any } }) {
     setDelay(Number(e.target.value));
