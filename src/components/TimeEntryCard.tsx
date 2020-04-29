@@ -41,9 +41,9 @@ export function TimeEntryCard(props: { countStart: any; active: boolean }) {
     }
   }, delay);
 
-  function handleDelayChange(e: { target: { value: any } }) {
+  /*function handleDelayChange(e: { target: { value: any } }) {
     setDelay(Number(e.target.value));
-  }
+  }*/
 
   return (
     <div style={{ textAlign: "center" }}>
