@@ -1,7 +1,8 @@
-import React from 'react';
-import { Card, Layout } from 'antd';
-import {ClockCircleOutlined} from '@ant-design/icons'
-import './App.css';
+import React from "react";
+import { Card, Layout } from "antd";
+import { ClockCircleOutlined } from "@ant-design/icons";
+import "./App.css";
+import { TimeEntryCard } from "./components/TimeEntryCard";
 
 function App() {
   return (
@@ -9,6 +10,8 @@ function App() {
       <Layout.Content>
         <Card title="Freshbook's Time Tracker">
           <ClockCircleOutlined /> Hello World
+          <TimeEntryCard countStart={2} active={false} />
+          <TimeEntryCard countStart={60} active={true} />
         </Card>
       </Layout.Content>
     </Layout>
