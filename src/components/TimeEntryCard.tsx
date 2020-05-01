@@ -1,56 +1,61 @@
 import * as React from "react";
-import { useState, useEffect, useRef } from "react";
+import { TimerData, setTimeDisplay } from "../App";
+import { Button, Card } from "antd";
+import {
+  DeleteOutlined,
+  PauseOutlined,
+  PlayCircleOutlined,
+} from "@ant-design/icons";
+import { DisplayElapsedTime } from "./DisplayElapsedTime";
 
-function useInterval(callback: any, delay: number | null) {
-  const savedCallback = useRef();
-
-  // Remember the latest function.
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
-
-  // Set up the interval.
-  useEffect(() => {
-    function tick() {
-      // @ts-ignore
-      savedCallback.current();
-    }
-    if (delay !== null) {
-      let id = setInterval(tick, delay);
-      return () => clearInterval(id);
-    }
-  }, [delay]);
-}
-
-export function TimeEntryCard(props: { countStart: any; active: boolean }) {
-  let [displayValue, setDisplayValue] = useState(props.countStart);
-
-  let [count, setCount] = useState(props.countStart);
-  useEffect(() => {
-    let date = new Date(0);
-    date.setSeconds(count);
-    setDisplayValue(date.toISOString().substr(11, 8));
-  }, [count]);
-
-  //let [delay, setDelay] = useState(1000);
-
-  useInterval(() => {
-    // Your custom logic here
-    if (props.active) {
-      setCount(count + 1);
-    }
-  }, 1000);
-
-  /*function handleDelayChange(e: { target: { value: any } }) {
-    setDelay(Number(e.target.value));
-  }*/
+export function TimeEntryCard(props: {
+  timerData: TimerData;
+  active: boolean;
+  onProjectChange: (project: string) => void;
+  onTimerDelete: () => void;
+  onTimerPause: () => void;
+  onTimerContinue: () => void;
+}) {
+  const playOrPauseBtn = props.active ? (
+    <Button
+      type="primary"
+      icon={<PauseOutlined />}
+      size="large"
+      onClick={props.onTimerPause}
+      ghost={true}
+    />
+  ) : (
+    <Button
+      type="primary"
+      icon={<PlayCircleOutlined />}
+      size="large"
+      onClick={props.onTimerContinue}
+    />
+  );
 
   return (
-    <div style={{ textAlign: "center" }}>
-      seconds count: {count}
-      <br />
-      display: {displayValue}
+    <Card style={{ textAlign: "center" }}>
+      <div style={{ clear: "both" }}></div>
+      <DisplayElapsedTime
+        elapsedTime={props.timerData.count}
+        active={props.active}
+      />
+      <span style={{ float: "right" }}>
+        {playOrPauseBtn}
+        <Button
+          type="primary"
+          icon={<DeleteOutlined />}
+          size="large"
+          onClick={props.onTimerDelete}
+          danger={true}
+        />
+      </span>
+      <div style={{ clear: "both" }}></div>
       <hr />
-    </div>
+      {setTimeDisplay(props.timerData.count)}
+      <hr />
+      seconds count: {props.timerData.count}
+      <hr />
+    </Card>
   );
 }
