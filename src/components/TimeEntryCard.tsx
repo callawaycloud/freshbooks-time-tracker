@@ -1,38 +1,23 @@
-import * as React from "react";
-import { TimerData, setTimeDisplay } from "../App";
-import { Button, Card } from "antd";
 import {
   DeleteOutlined,
   PauseOutlined,
   PlayCircleOutlined,
 } from "@ant-design/icons";
+import { Button, Card } from "antd";
+import { ButtonProps } from "antd/lib/button";
+import * as React from "react";
+import { getTimerDisplay } from "../App";
+import { TimerEntry } from "../lib/timerState";
 import { DisplayElapsedTime } from "./DisplayElapsedTime";
 
 export function TimeEntryCard(props: {
-  timerData: TimerData;
+  timerData: TimerEntry;
   active: boolean;
   onProjectChange: (project: string) => void;
   onTimerDelete: () => void;
   onTimerPause: () => void;
   onTimerContinue: () => void;
 }) {
-  const playOrPauseBtn = props.active ? (
-    <Button
-      type="primary"
-      icon={<PauseOutlined />}
-      size="large"
-      onClick={props.onTimerPause}
-      ghost={true}
-    />
-  ) : (
-    <Button
-      type="primary"
-      icon={<PlayCircleOutlined />}
-      size="large"
-      onClick={props.onTimerContinue}
-    />
-  );
-
   return (
     <Card style={{ textAlign: "center" }}>
       <div style={{ clear: "both" }}></div>
@@ -41,21 +26,56 @@ export function TimeEntryCard(props: {
         active={props.active}
       />
       <span style={{ float: "right" }}>
-        {playOrPauseBtn}
-        <Button
-          type="primary"
-          icon={<DeleteOutlined />}
-          size="large"
-          onClick={props.onTimerDelete}
-          danger={true}
+        <TimeEntryActions
+          active={props.active}
+          onTimerContinue={props.onTimerContinue}
+          onTimerPause={props.onTimerPause}
+          onTimerDelete={props.onTimerDelete}
         />
       </span>
       <div style={{ clear: "both" }}></div>
       <hr />
-      {setTimeDisplay(props.timerData.count)}
+      {getTimerDisplay(props.timerData.count)}
       <hr />
       seconds count: {props.timerData.count}
       <hr />
     </Card>
+  );
+}
+
+// include Delete Button here!
+function TimeEntryActions(props: {
+  active: boolean;
+  onTimerPause: () => void;
+  onTimerContinue: () => void;
+  onTimerDelete: () => void;
+}) {
+  const pauseOrPlayProps: ButtonProps = props.active
+    ? {
+        icon: <PauseOutlined />,
+        onClick: props.onTimerPause,
+        ghost: true,
+      }
+    : {
+        icon: <PlayCircleOutlined />,
+        onClick: props.onTimerContinue,
+      };
+  return (
+    <React.Fragment>
+      <Button
+        type="primary"
+        size="large"
+        {...pauseOrPlayProps}
+        key="pausePlayBtn"
+      />
+      <Button
+        type="primary"
+        icon={<DeleteOutlined />}
+        size="large"
+        onClick={props.onTimerDelete}
+        danger={true}
+        key="deleteBtn"
+      />
+    </React.Fragment>
   );
 }

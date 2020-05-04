@@ -1,26 +1,19 @@
-import * as React from "react";
-import { TimerData, setTimeDisplay } from "../App";
 import { Tag } from "antd";
+import * as React from "react";
+import { getTimerDisplay } from "../App";
 
-export function DisplayElapsedTime(props: {
+export interface DisplayElapsedTimeProps {
   elapsedTime: number;
   active: boolean;
-}) {
-  if (props.active) {
-    return (
-      <Tag color="success" style={{ float: "left" }}>
-        <span style={{ fontSize: "30px", lineHeight: "40px" }}>
-          {setTimeDisplay(props.elapsedTime)}
-        </span>
-      </Tag>
-    );
-  } else {
-    return (
-      <Tag color="warning" style={{ float: "left" }}>
-        <span style={{ fontSize: "30px", lineHeight: "40px" }}>
-          {setTimeDisplay(props.elapsedTime)}
-        </span>
-      </Tag>
-    );
-  }
+}
+
+export function DisplayElapsedTime(props: DisplayElapsedTimeProps) {
+  let color = props.active ? "success" : "warning";
+  return (
+    <Tag color={color} style={{ float: "left" }}>
+      <span style={{ fontSize: "30px", lineHeight: "40px" }}>
+        {getTimerDisplay(props.elapsedTime)}
+      </span>
+    </Tag>
+  );
 }
