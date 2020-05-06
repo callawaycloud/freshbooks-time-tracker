@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Layout, Button } from "antd";
-import { ClockCircleOutlined } from "@ant-design/icons";
+import { ClockCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import "./App.css";
 import { TimeEntryCard } from "./components/TimeEntryCard";
 import { useState } from "react";
@@ -10,7 +10,9 @@ import {
   incrementTimer,
   removeTimer,
   newTimer,
+  FieldEntry,
 } from "./lib/timerState";
+//import { testIntegration } from "./lib/freshbookClient";
 
 export const TEMP_ID_PREFIX = "tmp-";
 
@@ -34,6 +36,7 @@ function App() {
     let newTempId = TEMP_ID_PREFIX + new Date().getUTCMilliseconds().toString();
     setTimerObj(newTimer(timerObj, newTempId));
     setActiveTimer(newTempId);
+    //testIntegration();
   };
 
   /*
@@ -41,6 +44,12 @@ function App() {
   if (true) {
     return <div>Login</div>;
   }*/
+
+  const handleFieldUpdate = (obj: FieldEntry, key: string) => {
+    let tempState = { ...timerObj };
+    tempState[key] = { ...tempState[key], [obj.field]: obj.fieldValue };
+    setTimerObj(tempState);
+  };
 
   const timerDisplay: JSX.Element[] = Object.keys(timerObj).map((key) => {
     return (
@@ -71,6 +80,9 @@ function App() {
         onTimerContinue={() => {
           setActiveTimer(key);
         }}
+        onFieldUpdate={(obj: FieldEntry) => {
+          handleFieldUpdate(obj, key);
+        }}
       />
     );
   });
@@ -79,11 +91,25 @@ function App() {
     <Layout>
       <Layout.Content>
         <Card title="Freshbook's Time Tracker">
-          <ClockCircleOutlined /> Hello World
-          <Button type="primary" onClick={handleNewTimer}>
-            Add Timer
-          </Button>
-          {timerDisplay}
+          <Card
+            title={
+              <span>
+                <ClockCircleOutlined />
+                &nbsp; Timers
+              </span>
+            }
+            extra={
+              <Button
+                type="primary"
+                onClick={handleNewTimer}
+                icon={<PlusOutlined />}
+                style={{ float: "right" }}
+              />
+            }
+            style={{ minWidth: 600, maxWidth: 1200, margin: "auto" }}
+          >
+            {timerDisplay}
+          </Card>
         </Card>
       </Layout.Content>
     </Layout>

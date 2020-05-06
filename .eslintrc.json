@@ -1,5 +1,13 @@
 {
   "rules": {
     "no-unused-vars": "warn"
+  },
+  "plugins": ["react"],
+  "parserOptions": {
+    "ecmaVersion": 2017
+  },
+
+  "env": {
+    "es6": true
   }
 }

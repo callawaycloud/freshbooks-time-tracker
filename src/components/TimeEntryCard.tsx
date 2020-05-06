@@ -3,12 +3,14 @@ import {
   PauseOutlined,
   PlayCircleOutlined,
 } from "@ant-design/icons";
-import { Button, Card } from "antd";
+import { Button, Card, Row, Col, Select, Input } from "antd";
 import { ButtonProps } from "antd/lib/button";
 import * as React from "react";
 import { getTimerDisplay } from "../App";
-import { TimerEntry } from "../lib/timerState";
+import { TimerEntry, FieldEntry } from "../lib/timerState";
 import { DisplayElapsedTime } from "./DisplayElapsedTime";
+const { Option } = Select;
+const { TextArea } = Input;
 
 export function TimeEntryCard(props: {
   timerData: TimerEntry;
@@ -17,9 +19,10 @@ export function TimeEntryCard(props: {
   onTimerDelete: () => void;
   onTimerPause: () => void;
   onTimerContinue: () => void;
+  onFieldUpdate: (obj: FieldEntry) => void;
 }) {
   return (
-    <Card style={{ textAlign: "center" }}>
+    <Card style={{ textAlign: "center", margin: "15px" }}>
       <div style={{ clear: "both" }}></div>
       <DisplayElapsedTime
         elapsedTime={props.timerData.count}
@@ -33,12 +36,60 @@ export function TimeEntryCard(props: {
           onTimerDelete={props.onTimerDelete}
         />
       </span>
-      <div style={{ clear: "both" }}></div>
-      <hr />
-      {getTimerDisplay(props.timerData.count)}
-      <hr />
-      seconds count: {props.timerData.count}
-      <hr />
+      <div style={{ clear: "both" }}>
+        <Row gutter={[16, 16]} style={{ textAlign: "left" }}>
+          <Col span={12}>
+            <Select
+              key="selectedProject"
+              defaultValue="lucy"
+              style={{ width: "80%", marginTop: 10 }}
+              onChange={(value) =>
+                props.onFieldUpdate({
+                  fieldValue: value,
+                  field: "project",
+                })
+              }
+            >
+              <Option value="jack">Jack</Option>
+              <Option value="lucy">Lucy</Option>
+              <Option value="disabled" disabled>
+                Disabled
+              </Option>
+              <Option value="Yiminghe">yiminghe</Option>
+            </Select>
+            <Select
+              defaultValue="lucy"
+              style={{ width: "80%", marginTop: 10 }}
+              onChange={(value) =>
+                props.onFieldUpdate({
+                  fieldValue: value,
+                  field: "task",
+                })
+              }
+            >
+              <Option value="jack">Jack</Option>
+              <Option value="lucy">Lucy</Option>
+              <Option value="disabled" disabled>
+                Disabled
+              </Option>
+              <Option value="Yiminghe">yiminghe</Option>
+            </Select>
+          </Col>
+          <Col span={12}>
+            <TextArea
+              rows={3}
+              style={{ marginTop: 10 }}
+              placeholder="Notes....."
+              onChange={(event) =>
+                props.onFieldUpdate({
+                  fieldValue: event.target.value,
+                  field: "notes",
+                })
+              }
+            />
+          </Col>
+        </Row>
+      </div>
     </Card>
   );
 }
