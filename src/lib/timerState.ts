@@ -6,9 +6,11 @@ interface KeyMap<T> {
 
 export interface TimerEntry {
   count: number;
-  project?: SelectValue;
+  project?: string;
   task?: string;
   notes?: string;
+  freshbooksId?: string;
+  unsavedChanges?: boolean;
 }
 
 export interface FieldEntry {
@@ -22,6 +24,7 @@ export function newTimer(state: TimerState, newTempId: string) {
   let tempState = { ...state };
   tempState[newTempId] = {
     count: 0,
+    unsavedChanges: true,
   };
 
   console.log(tempState);

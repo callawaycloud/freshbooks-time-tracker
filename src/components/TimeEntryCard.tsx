@@ -2,6 +2,7 @@ import {
   DeleteOutlined,
   PauseOutlined,
   PlayCircleOutlined,
+  CloudUploadOutlined,
 } from "@ant-design/icons";
 import { Button, Card, Row, Col, Select, Input } from "antd";
 import { ButtonProps } from "antd/lib/button";
@@ -20,6 +21,7 @@ export function TimeEntryCard(props: {
   onTimerPause: () => void;
   onTimerContinue: () => void;
   onFieldUpdate: (obj: FieldEntry) => void;
+  onTimerSave: () => void;
 }) {
   return (
     <Card style={{ textAlign: "center", margin: "15px" }}>
@@ -34,6 +36,7 @@ export function TimeEntryCard(props: {
           onTimerContinue={props.onTimerContinue}
           onTimerPause={props.onTimerPause}
           onTimerDelete={props.onTimerDelete}
+          onTimerSave={props.onTimerSave}
         />
       </span>
       <div style={{ clear: "both" }}>
@@ -41,7 +44,7 @@ export function TimeEntryCard(props: {
           <Col span={12}>
             <Select
               key="selectedProject"
-              defaultValue="lucy"
+              defaultValue={props.timerData.project}
               style={{ width: "80%", marginTop: 10 }}
               onChange={(value) =>
                 props.onFieldUpdate({
@@ -58,7 +61,7 @@ export function TimeEntryCard(props: {
               <Option value="Yiminghe">yiminghe</Option>
             </Select>
             <Select
-              defaultValue="lucy"
+              defaultValue={props.timerData.task}
               style={{ width: "80%", marginTop: 10 }}
               onChange={(value) =>
                 props.onFieldUpdate({
@@ -80,6 +83,7 @@ export function TimeEntryCard(props: {
               rows={3}
               style={{ marginTop: 10 }}
               placeholder="Notes....."
+              defaultValue={props.timerData.notes}
               onChange={(event) =>
                 props.onFieldUpdate({
                   fieldValue: event.target.value,
@@ -100,6 +104,7 @@ function TimeEntryActions(props: {
   onTimerPause: () => void;
   onTimerContinue: () => void;
   onTimerDelete: () => void;
+  onTimerSave: () => void;
 }) {
   const pauseOrPlayProps: ButtonProps = props.active
     ? {
@@ -118,6 +123,13 @@ function TimeEntryActions(props: {
         size="large"
         {...pauseOrPlayProps}
         key="pausePlayBtn"
+      />
+      <Button
+        type="primary"
+        icon={<CloudUploadOutlined />}
+        size="large"
+        onClick={props.onTimerSave}
+        key="saveBtn"
       />
       <Button
         type="primary"

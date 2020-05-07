@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, Layout, Button } from "antd";
 import { ClockCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import "./App.css";
@@ -11,7 +11,9 @@ import {
   removeTimer,
   newTimer,
   FieldEntry,
+  TimerEntry,
 } from "./lib/timerState";
+import { useLocalStorage } from "./lib/useLocalStorage";
 //import { testIntegration } from "./lib/freshbookClient";
 
 export const TEMP_ID_PREFIX = "tmp-";
@@ -26,10 +28,29 @@ function App() {
   let [activeTimer, setActiveTimer] = useState<string | undefined>(undefined);
 
   let [timerObj, setTimerObj] = useState<TimerState>({});
-  // start with temp ID then replace with freshbook entry id
+
+  let [unsavedTimers, setUnsavedTimers] = useLocalStorage(
+    "unsavedTimers",
+    timerObj
+  );
+
+  let [savedTimers, setSavedTimers] = useLocalStorage("savedTimers", timerObj);
+
+  let [initialLoad, setInitialLoad] = useState<boolean>(false);
+  useEffect(() => {
+    console.log(unsavedTimers);
+    let tempTimerObj = { ...timerObj };
+    tempTimerObj = { ...tempTimerObj, ...unsavedTimers };
+    console.log(tempTimerObj);
+    setTimerObj(tempTimerObj);
+    setInitialLoad(true);
+  }, [initialLoad]);
 
   useInterval(() => {
     incrementTimer(timerObj, activeTimer, setTimerObj);
+    if (activeTimer && timerObj[activeTimer].count % 60 == 0) {
+      setUnsavedTimers(timerObj);
+    }
   }, 1000);
 
   const handleNewTimer = () => {
@@ -48,7 +69,24 @@ function App() {
   const handleFieldUpdate = (obj: FieldEntry, key: string) => {
     let tempState = { ...timerObj };
     tempState[key] = { ...tempState[key], [obj.field]: obj.fieldValue };
+    tempState[key].unsavedChanges = true;
     setTimerObj(tempState);
+    setUnsavedTimers(tempState);
+  };
+
+  const saveTimeEntry = (key: string) => {
+    let tempTimerObj = { ...timerObj };
+    let tempTimeEntry: TimerEntry = tempTimerObj[key];
+    tempTimeEntry.unsavedChanges = false;
+
+    if (!tempTimeEntry.freshbooksId) {
+      tempTimeEntry.freshbooksId = key;
+    }
+
+    setTimerObj(tempTimerObj);
+    console.log(timerObj);
+
+    //console.log(useLocalStorage);
   };
 
   const timerDisplay: JSX.Element[] = Object.keys(timerObj).map((key) => {
@@ -82,6 +120,9 @@ function App() {
         }}
         onFieldUpdate={(obj: FieldEntry) => {
           handleFieldUpdate(obj, key);
+        }}
+        onTimerSave={() => {
+          saveTimeEntry(key);
         }}
       />
     );
