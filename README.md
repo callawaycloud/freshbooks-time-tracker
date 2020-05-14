@@ -2,6 +2,10 @@
 
 An app for management multiple timers and logging them to freshbooks.
 
+## Setup
+
+[TODO]
+
 ## Development
 
 1. clone
@@ -12,3 +16,5 @@ An app for management multiple timers and logging them to freshbooks.
 ### Packaging
 
 1. `yarn package`
+
+dist for your current OS files will be added to `release` folder
