@@ -1,13 +1,22 @@
 {
-  "rules": {
-    "no-unused-vars": "warn"
-  },
-  "plugins": ["react"],
+  "parser": "@typescript-eslint/parser", // Specifies the ESLint parser
   "parserOptions": {
-    "ecmaVersion": 2017
+    "ecmaVersion": 2020, // Allows for the parsing of modern ECMAScript features
+    "sourceType": "module", // Allows for the use of imports
+    "ecmaFeatures": {
+      "jsx": true // Allows for the parsing of JSX
+    }
   },
-
-  "env": {
-    "es6": true
+  "settings": {
+    "react": {
+      "version": "detect" // Tells eslint-plugin-react to automatically detect the version of React to use
+    }
+  },
+  "extends": [
+    "plugin:react/recommended", // Uses the recommended rules from @eslint-plugin-react
+    "plugin:@typescript-eslint/recommended" // Uses the recommended rules from @typescript-eslint/eslint-plugin
+  ],
+  "rules": {
+    "@typescript-eslint/explicit-function-return-type": "off"
   }
 }

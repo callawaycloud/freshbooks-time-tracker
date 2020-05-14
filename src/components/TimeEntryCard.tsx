@@ -1,15 +1,8 @@
-import {
-  DeleteOutlined,
-  PauseOutlined,
-  PlayCircleOutlined,
-  CloudUploadOutlined,
-  SaveOutlined,
-} from "@ant-design/icons";
-import { Button, Card, Row, Col, Select, Input } from "antd";
+import { CloudUploadOutlined, DeleteOutlined, PauseOutlined, PlayCircleOutlined, SaveOutlined } from "@ant-design/icons";
+import { Button, Card, Col, Input, Row, Select } from "antd";
 import { ButtonProps } from "antd/lib/button";
 import * as React from "react";
-import { getTimerDisplay } from "../App";
-import { TimerEntry, FieldEntry } from "../lib/timerState";
+import { FieldEntry, TimerEntry } from "../lib/timerState";
 import { DisplayElapsedTime } from "./DisplayElapsedTime";
 const { Option } = Select;
 const { TextArea } = Input;
@@ -38,8 +31,8 @@ export function TimeEntryCard(props: {
       View in Freshbooks
     </Button>
   ) : (
-    ""
-  );
+      ""
+    );
 
   return (
     <Card style={{ textAlign: "center", margin: "15px" }}>
@@ -133,14 +126,14 @@ function TimeEntryActions(props: {
   console.log(props.notSavedToFreshbooks);
   const pauseOrPlayProps: ButtonProps = props.active
     ? {
-        icon: <PauseOutlined />,
-        onClick: props.onTimerPause,
-        ghost: true,
-      }
+      icon: <PauseOutlined />,
+      onClick: props.onTimerPause,
+      ghost: true,
+    }
     : {
-        icon: <PlayCircleOutlined />,
-        onClick: props.onTimerContinue,
-      };
+      icon: <PlayCircleOutlined />,
+      onClick: props.onTimerContinue,
+    };
   return (
     <React.Fragment>
       <Button
@@ -155,8 +148,8 @@ function TimeEntryActions(props: {
           props.notSavedToFreshbooks ? (
             <CloudUploadOutlined />
           ) : (
-            <SaveOutlined />
-          )
+              <SaveOutlined />
+            )
         }
         size="large"
         onClick={props.onTimerSave}

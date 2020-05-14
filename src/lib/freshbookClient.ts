@@ -1,14 +1,14 @@
 const FreshBooks = require("freshbooks-api");
 
-export interface freshbookClient {
+export interface FreshbookClient {
   token: string;
 }
 
-export interface freshbookXMLRequest {
+export interface FreshbookXMLRequest {
   xmlString: string;
 }
 
-export const testThis: freshbookXMLRequest = { xmlString: "" };
+export const testThis: FreshbookXMLRequest = { xmlString: "" };
 
 const api_url = "https://callawaycloudconsulting.freshbooks.com/api/2.1/xml-in";
 const api_token = "84ab11cf81ffd7f7d3dd2e65d085a7bf";

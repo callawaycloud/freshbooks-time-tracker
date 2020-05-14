@@ -1,5 +1,3 @@
-import { SelectValue } from "antd/lib/select";
-
 interface KeyMap<T> {
   [key: string]: T;
 }

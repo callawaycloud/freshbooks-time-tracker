@@ -1,31 +1,19 @@
-import React, { useEffect } from "react";
+import { ClockCircleOutlined, PlusOutlined, SettingOutlined } from "@ant-design/icons";
+import { Alert, Button, Card, Layout } from "antd";
 import moment from "moment";
-import { Card, Layout, Button, Drawer, Input, Alert } from "antd";
-import {
-  ClockCircleOutlined,
-  PlusOutlined,
-  SettingOutlined,
-} from "@ant-design/icons";
+import React, { useEffect, useState } from "react";
 import "./App.css";
-import { TimeEntryCard } from "./components/TimeEntryCard";
-import { useState } from "react";
-import { useInterval } from "./lib/useInterval";
-import {
-  TimerState,
-  incrementTimer,
-  removeTimer,
-  newTimer,
-  FieldEntry,
-  TimerEntry,
-} from "./lib/timerState";
-import { useLocalStorage } from "./lib/useLocalStorage";
 import { SettingsDrawer } from "./components/SettingsDrawer";
+import { TimeEntryCard } from "./components/TimeEntryCard";
+import { FieldEntry, incrementTimer, newTimer, removeTimer, TimerEntry, TimerState } from "./lib/timerState";
+import { useInterval } from "./lib/useInterval";
+import { useLocalStorage } from "./lib/useLocalStorage";
 //import { testIntegration } from "./lib/freshbookClient";
 
 export const TEMP_ID_PREFIX = "tmp-";
 
 export const getTimerDisplay = (count: number) => {
-  let date = new Date(0);
+  const date = new Date(0);
   date.setSeconds(count);
   return date.toISOString().substr(11, 8);
 };
@@ -33,27 +21,27 @@ export const getTimerDisplay = (count: number) => {
 function App() {
   const todaysDate = moment().format("MMMM Do, YYYY");
 
-  let [showSettings, setShowSettings] = useState<boolean>(false);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
 
-  let [activeTimer, setActiveTimer] = useState<string | undefined>(undefined);
+  const [activeTimer, setActiveTimer] = useState<string | undefined>(undefined);
 
-  let [timerObj, setTimerObj] = useState<TimerState>({});
+  const [timerObj, setTimerObj] = useState<TimerState>({});
 
-  let [localStorageTimers, setLocalStorageTimers] = useLocalStorage(
+  const [localStorageTimers, setLocalStorageTimers] = useLocalStorage(
     "localStorageTimers",
     timerObj
   );
 
   //let [savedTimers, setSavedTimers] = useLocalStorage("savedTimers", timerObj);
 
-  let [apiURL, setApiUrl] = useLocalStorage("apiURL", undefined);
+  const [apiURL, setApiUrl] = useLocalStorage("apiURL", undefined);
 
-  let [freshbookToken, setFreshbookToken] = useLocalStorage(
+  const [freshbookToken, setFreshbookToken] = useLocalStorage(
     "freshbookToken",
     undefined
   );
 
-  let [initialLoad, setInitialLoad] = useState<boolean>(false);
+  const [initialLoad, setInitialLoad] = useState<boolean>(false);
   useEffect(() => {
     console.log(localStorageTimers);
     let tempTimerObj = { ...timerObj };
@@ -71,7 +59,7 @@ function App() {
   }, 1000);
 
   const handleNewTimer = () => {
-    let newTempId = TEMP_ID_PREFIX + new Date().getUTCMilliseconds().toString();
+    const newTempId = TEMP_ID_PREFIX + new Date().getUTCMilliseconds().toString();
     setTimerObj(newTimer(timerObj, newTempId));
     setActiveTimer(newTempId);
     //testIntegration();
@@ -84,7 +72,7 @@ function App() {
   }*/
 
   const handleFieldUpdate = (obj: FieldEntry, key: string) => {
-    let tempState = { ...timerObj };
+    const tempState = { ...timerObj };
     tempState[key] = { ...tempState[key], [obj.field]: obj.fieldValue };
     tempState[key].unsavedChanges = true;
     setTimerObj(tempState);
@@ -92,8 +80,8 @@ function App() {
   };
 
   const saveTimeEntry = (key: string) => {
-    let tempTimerObj = { ...timerObj };
-    let tempTimeEntry: TimerEntry = tempTimerObj[key];
+    const tempTimerObj = { ...timerObj };
+    const tempTimeEntry: TimerEntry = tempTimerObj[key];
     tempTimeEntry.unsavedChanges = false;
 
     if (!tempTimeEntry.freshbooksId) {
@@ -108,7 +96,7 @@ function App() {
     if (activeTimer === key) {
       setActiveTimer(undefined);
     }
-    let tempState = removeTimer(timerObj, key);
+    const tempState = removeTimer(timerObj, key);
     setTimerObj(tempState);
     setLocalStorageTimers(tempState);
   };
@@ -139,7 +127,7 @@ function App() {
         active={activeTimer === key}
         key={key}
         onProjectChange={(project) => {
-          let id = key;
+          const id = key;
           console.log(project);
           console.log(key);
           console.log(id);
@@ -177,8 +165,8 @@ function App() {
         type="warning"
       />
     ) : (
-      ""
-    );
+        ""
+      );
 
   return (
     <Layout>
@@ -191,7 +179,7 @@ function App() {
       />
       <Layout.Content>
         <Card
-          title={<span>Freshbook's Time Tracker </span>}
+          title={<span>Freshbook&apos;s Time Tracker </span>}
           extra={
             <Button
               type="primary"

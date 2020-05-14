@@ -1,6 +1,5 @@
-import * as React from "react";
-import { TimerEntry, FieldEntry } from "../lib/timerState";
 import { Drawer, Input } from "antd";
+import * as React from "react";
 
 export function SettingsDrawer(props: {
   showSettings: boolean;

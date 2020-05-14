@@ -8,7 +8,7 @@ export interface DisplayElapsedTimeProps {
 }
 
 export function DisplayElapsedTime(props: DisplayElapsedTimeProps) {
-  let color = props.active ? "success" : "warning";
+  const color = props.active ? "success" : "warning";
   return (
     <Tag color={color} style={{ float: "left" }}>
       <span style={{ fontSize: "30px", lineHeight: "40px" }}>
