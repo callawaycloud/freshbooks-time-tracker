@@ -6,11 +6,13 @@ interface KeyMap<T> {
 
 export interface TimerEntry {
   count: number;
+  roundedCount: number;
   project?: string;
   task?: string;
   notes?: string;
   freshbooksId?: string;
   unsavedChanges?: boolean;
+  date?: Date;
 }
 
 export interface FieldEntry {
@@ -24,11 +26,10 @@ export function newTimer(state: TimerState, newTempId: string) {
   let tempState = { ...state };
   tempState[newTempId] = {
     count: 0,
+    roundedCount: 0,
     unsavedChanges: true,
+    date: new Date(),
   };
-
-  console.log(tempState);
-
   return tempState;
 }
 
@@ -42,9 +43,13 @@ export function incrementTimer(
   }
 
   let tempState = { ...state };
+
+  let newCount = tempState[timerId].count + 1;
+
   tempState[timerId] = {
     ...tempState[timerId],
-    count: tempState[timerId].count + 1,
+    count: newCount,
+    roundedCount: Math.ceil((newCount - 60) / 900) * 900,
   };
   callback?.(tempState);
   return tempState;

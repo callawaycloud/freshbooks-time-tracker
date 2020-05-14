@@ -1,6 +1,11 @@
 import React, { useEffect } from "react";
-import { Card, Layout, Button } from "antd";
-import { ClockCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import moment from "moment";
+import { Card, Layout, Button, Drawer, Input, Alert } from "antd";
+import {
+  ClockCircleOutlined,
+  PlusOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import "./App.css";
 import { TimeEntryCard } from "./components/TimeEntryCard";
 import { useState } from "react";
@@ -14,6 +19,7 @@ import {
   TimerEntry,
 } from "./lib/timerState";
 import { useLocalStorage } from "./lib/useLocalStorage";
+import { SettingsDrawer } from "./components/SettingsDrawer";
 //import { testIntegration } from "./lib/freshbookClient";
 
 export const TEMP_ID_PREFIX = "tmp-";
@@ -25,22 +31,33 @@ export const getTimerDisplay = (count: number) => {
 };
 
 function App() {
+  const todaysDate = moment().format("MMMM Do, YYYY");
+
+  let [showSettings, setShowSettings] = useState<boolean>(false);
+
   let [activeTimer, setActiveTimer] = useState<string | undefined>(undefined);
 
   let [timerObj, setTimerObj] = useState<TimerState>({});
 
-  let [unsavedTimers, setUnsavedTimers] = useLocalStorage(
-    "unsavedTimers",
+  let [localStorageTimers, setLocalStorageTimers] = useLocalStorage(
+    "localStorageTimers",
     timerObj
   );
 
-  let [savedTimers, setSavedTimers] = useLocalStorage("savedTimers", timerObj);
+  //let [savedTimers, setSavedTimers] = useLocalStorage("savedTimers", timerObj);
+
+  let [apiURL, setApiUrl] = useLocalStorage("apiURL", undefined);
+
+  let [freshbookToken, setFreshbookToken] = useLocalStorage(
+    "freshbookToken",
+    undefined
+  );
 
   let [initialLoad, setInitialLoad] = useState<boolean>(false);
   useEffect(() => {
-    console.log(unsavedTimers);
+    console.log(localStorageTimers);
     let tempTimerObj = { ...timerObj };
-    tempTimerObj = { ...tempTimerObj, ...unsavedTimers };
+    tempTimerObj = { ...tempTimerObj, ...localStorageTimers };
     console.log(tempTimerObj);
     setTimerObj(tempTimerObj);
     setInitialLoad(true);
@@ -48,8 +65,8 @@ function App() {
 
   useInterval(() => {
     incrementTimer(timerObj, activeTimer, setTimerObj);
-    if (activeTimer && timerObj[activeTimer].count % 60 == 0) {
-      setUnsavedTimers(timerObj);
+    if (activeTimer && timerObj[activeTimer].count % 10 == 0) {
+      setLocalStorageTimers(timerObj);
     }
   }, 1000);
 
@@ -71,7 +88,7 @@ function App() {
     tempState[key] = { ...tempState[key], [obj.field]: obj.fieldValue };
     tempState[key].unsavedChanges = true;
     setTimerObj(tempState);
-    setUnsavedTimers(tempState);
+    setLocalStorageTimers(tempState);
   };
 
   const saveTimeEntry = (key: string) => {
@@ -84,9 +101,35 @@ function App() {
     }
 
     setTimerObj(tempTimerObj);
-    console.log(timerObj);
+    setLocalStorageTimers(tempTimerObj);
+  };
 
-    //console.log(useLocalStorage);
+  const handleTimerDelete = (key: string) => {
+    if (activeTimer === key) {
+      setActiveTimer(undefined);
+    }
+    let tempState = removeTimer(timerObj, key);
+    setTimerObj(tempState);
+    setLocalStorageTimers(tempState);
+  };
+
+  /*const handleSavedAndUnsavedTimerStorage = () => {
+
+  };*/
+
+  const onSettingsClose = () => {
+    setShowSettings(false);
+  };
+
+  const onSettingsChange = (
+    localStorageKey: string,
+    value: string | undefined
+  ) => {
+    if (localStorageKey === "apiURL") {
+      setApiUrl(value);
+    } else if (localStorageKey === "freshbookToken") {
+      setFreshbookToken(value);
+    }
   };
 
   const timerDisplay: JSX.Element[] = Object.keys(timerObj).map((key) => {
@@ -104,19 +147,17 @@ function App() {
           // set timer obj
         }}
         onTimerDelete={() => {
-          if (activeTimer === key) {
-            setActiveTimer(undefined);
-          }
-
-          setTimerObj(removeTimer(timerObj, key));
+          handleTimerDelete(key);
         }}
         onTimerPause={() => {
           if (activeTimer === key) {
             setActiveTimer(undefined);
+            setLocalStorageTimers(timerObj);
           }
         }}
         onTimerContinue={() => {
           setActiveTimer(key);
+          setLocalStorageTimers(timerObj);
         }}
         onFieldUpdate={(obj: FieldEntry) => {
           handleFieldUpdate(obj, key);
@@ -128,10 +169,42 @@ function App() {
     );
   });
 
+  const authenticationStatus =
+    !apiURL || !freshbookToken ? (
+      <Alert
+        message="Please Set Freshbook Authentication Settings"
+        description="Freshbook authentication settings are not currently set!"
+        type="warning"
+      />
+    ) : (
+      ""
+    );
+
   return (
     <Layout>
+      <SettingsDrawer
+        showSettings={showSettings}
+        apiURL={apiURL}
+        freshbookToken={freshbookToken}
+        onSettingsClose={onSettingsClose}
+        onSettingsChange={onSettingsChange}
+      />
       <Layout.Content>
-        <Card title="Freshbook's Time Tracker">
+        <Card
+          title={<span>Freshbook's Time Tracker </span>}
+          extra={
+            <Button
+              type="primary"
+              onClick={() => {
+                setShowSettings(true);
+                return showSettings;
+              }}
+              icon={<SettingOutlined />}
+            />
+          }
+        >
+          <h1 style={{ textAlign: "center" }}>{todaysDate}</h1>
+
           <Card
             title={
               <span>
@@ -149,6 +222,7 @@ function App() {
             }
             style={{ minWidth: 600, maxWidth: 1200, margin: "auto" }}
           >
+            {authenticationStatus}
             {timerDisplay}
           </Card>
         </Card>
@@ -158,3 +232,38 @@ function App() {
 }
 
 export default App;
+
+/*
+
+<Drawer
+        title="Settings"
+        placement="right"
+        closable={true}
+        onClose={() => {
+          setShowSettings(false);
+          return showSettings;
+        }}
+        visible={showSettings}
+        width={500}
+      >
+        <Input
+          value={apiURL}
+          key="apiUrlInputKey"
+          onChange={(e) => {
+            setApiUrl(e.target.value);
+          }}
+          addonBefore="API URL"
+        />
+        <br />
+        <br />
+        <Input
+          key="tokenInputKey"
+          value={freshbookToken}
+          onChange={(e) => {
+            setFreshbookToken(e.target.value);
+          }}
+          addonBefore="Authentication Token"
+        />
+      </Drawer>
+
+      */

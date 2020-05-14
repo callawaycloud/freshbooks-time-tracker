@@ -3,6 +3,7 @@ import {
   PauseOutlined,
   PlayCircleOutlined,
   CloudUploadOutlined,
+  SaveOutlined,
 } from "@ant-design/icons";
 import { Button, Card, Row, Col, Select, Input } from "antd";
 import { ButtonProps } from "antd/lib/button";
@@ -23,6 +24,23 @@ export function TimeEntryCard(props: {
   onFieldUpdate: (obj: FieldEntry) => void;
   onTimerSave: () => void;
 }) {
+  const dateFormatted = props.timerData.date
+    ? props.timerData.date.toString().slice(0, -14)
+    : "";
+
+  const hrefLink =
+    "https://callawaycloudconsulting.freshbooks.com/timesheet#date/" +
+    dateFormatted +
+    "/edit/" +
+    props.timerData.freshbooksId;
+  const linkToFreshbook = props.timerData.freshbooksId ? (
+    <Button type="link" href={hrefLink} target="_blank">
+      View in Freshbooks
+    </Button>
+  ) : (
+    ""
+  );
+
   return (
     <Card style={{ textAlign: "center", margin: "15px" }}>
       <div style={{ clear: "both" }}></div>
@@ -37,6 +55,7 @@ export function TimeEntryCard(props: {
           onTimerPause={props.onTimerPause}
           onTimerDelete={props.onTimerDelete}
           onTimerSave={props.onTimerSave}
+          notSavedToFreshbooks={!props.timerData.freshbooksId}
         />
       </span>
       <div style={{ clear: "both" }}>
@@ -93,6 +112,10 @@ export function TimeEntryCard(props: {
             />
           </Col>
         </Row>
+        <div>
+          Time to log in Freshbook: {props.timerData.roundedCount / 3600}
+        </div>
+        {linkToFreshbook}
       </div>
     </Card>
   );
@@ -105,7 +128,9 @@ function TimeEntryActions(props: {
   onTimerContinue: () => void;
   onTimerDelete: () => void;
   onTimerSave: () => void;
+  notSavedToFreshbooks: boolean;
 }) {
+  console.log(props.notSavedToFreshbooks);
   const pauseOrPlayProps: ButtonProps = props.active
     ? {
         icon: <PauseOutlined />,
@@ -126,10 +151,17 @@ function TimeEntryActions(props: {
       />
       <Button
         type="primary"
-        icon={<CloudUploadOutlined />}
+        icon={
+          props.notSavedToFreshbooks ? (
+            <CloudUploadOutlined />
+          ) : (
+            <SaveOutlined />
+          )
+        }
         size="large"
         onClick={props.onTimerSave}
         key="saveBtn"
+        danger={props.notSavedToFreshbooks}
       />
       <Button
         type="primary"
