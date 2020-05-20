@@ -3,7 +3,7 @@ import {
   PlusOutlined,
   SettingOutlined
 } from '@ant-design/icons';
-import { Alert, Button, Card, Layout } from 'antd';
+import { Alert, Button, Card, Layout, Select, message } from 'antd';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { SettingsDrawer } from './SettingsDrawer';
@@ -14,14 +14,25 @@ import {
   newTimer,
   removeTimer,
   TimerEntry,
-  TimerState
+  TimerState,
+  ProjectTaskState
 } from '../lib/timerState';
 import { useInterval } from '../lib/useInterval';
 import { useLocalStorage } from '../lib/useLocalStorage';
+import {
+  testIntegration,
+  Project,
+  retrieveProjects,
+  retrieveTasks,
+  Task,
+  retrieveProjectTasks
+} from '../lib/freshbookClient';
 // import { testIntegration } from "./lib/freshbookClient";
 
 export const TEMP_ID_PREFIX = 'tmp-';
 const todaysDate = moment().format('MMMM Do, YYYY');
+
+// const projectTasksMap: ProjectTaskState = {};
 
 function App() {
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -35,8 +46,6 @@ function App() {
     timerObj
   );
 
-  // let [savedTimers, setSavedTimers] = useLocalStorage("savedTimers", timerObj);
-
   const [apiURL, setApiUrl] = useLocalStorage('apiURL', undefined);
 
   const [freshbookToken, setFreshbookToken] = useLocalStorage(
@@ -44,15 +53,64 @@ function App() {
     undefined
   );
 
-  const [initialLoad, setInitialLoad] = useState<boolean>(false);
+  const [projectList, setProjecList] = useState<Project[]>([]);
+
+  const [taskList, setTaskList] = useState<Task[]>([]);
+
+  const [projectTasksMap, setProjectTasksMap] = useState<ProjectTaskState>({});
+
   useEffect(() => {
-    console.log(localStorageTimers);
-    let tempTimerObj = { ...timerObj };
-    tempTimerObj = { ...tempTimerObj, ...localStorageTimers };
-    console.log(tempTimerObj);
-    setTimerObj(tempTimerObj);
-    setInitialLoad(true);
-  }, [initialLoad]);
+    // setInitialLoad(true);
+    async function retrieveFreshbookData() {
+      let tempTimerObj = { ...timerObj };
+      tempTimerObj = { ...tempTimerObj, ...localStorageTimers };
+      setTimerObj(tempTimerObj);
+
+      try {
+        const projects = await retrieveProjects(apiURL, freshbookToken);
+        const tasks = await retrieveTasks(apiURL, freshbookToken);
+
+        const projectTaskMapClone = { ...projectTasksMap };
+
+        const testThis = await retrieveProjectTasks(
+          apiURL,
+          freshbookToken,
+          projects
+        );
+
+        console.log(testThis);
+
+        /* projects.forEach(async project => {
+          // eslint-disable-next-line no-param-reassign
+          project.tasks = await retrieveProjectTasks(
+            apiURL,
+            freshbookToken,
+            projects
+          );
+          console.log(project);
+          // const projectTaskMapClone = { ...projectTasksMap };
+          console.log('here', projectTaskMapClone);
+          projectTaskMapClone[project.project_id] = project.tasks;
+          setProjectTasksMap({ ...projectTaskMapClone });
+        }); */
+
+        /* projectTasksMap = projects.map(proj => {
+          return \
+        }); */
+
+
+
+        setProjecList(projects);
+        setTaskList(tasks);
+        setProjectTasksMap(testThis);
+      } catch (e) {
+        message.error(e.toString());
+        console.log(e);
+      }
+    }
+    retrieveFreshbookData();
+  }, []);
+  console.log(projectTasksMap);
 
   useInterval(() => {
     incrementTimer(timerObj, activeTimer, setTimerObj);
@@ -68,12 +126,6 @@ function App() {
     setActiveTimer(newTempId);
     // testIntegration();
   };
-
-  /*
-  Do authentication check here, then show authentication section
-  if (true) {
-    return <div>Login</div>;
-  } */
 
   const handleFieldUpdate = (obj: FieldEntry, key: string) => {
     const tempState = { ...timerObj };
@@ -105,10 +157,6 @@ function App() {
     setLocalStorageTimers(tempState);
   };
 
-  /* const handleSavedAndUnsavedTimerStorage = () => {
-
-  }; */
-
   const onSettingsClose = () => {
     setShowSettings(false);
   };
@@ -124,20 +172,49 @@ function App() {
     }
   };
 
+  // testIntegration(apiURL, freshbookToken);
+
+  const projectListPicklist: JSX.Element[] = projectList.map(key => {
+    return (
+      <Select.Option value={key.project_id} key={key.project_id}>
+        {key.name}
+      </Select.Option>
+    );
+  });
+
   const timerDisplay: JSX.Element[] = Object.keys(timerObj).map(key => {
+    // let taskListPicklistToShow: Task[] | JSX.Element[] = [];
+
+    /* if (timerObj[key].project) {
+      const projectId = timerObj[key].project ? timerObj[key].project : '';
+      taskListPicklistToShow = projectTasksMap[projectId || ''];
+    } */
+
+    console.log(projectTasksMap);
+
+    if (Object.keys(projectTasksMap).length === 0) {
+      return <div></div>;
+    }
+
+    const projectId = timerObj[key].project ? timerObj[key].project : '';
+
+    const taskListPicklist: JSX.Element[] = projectTasksMap[
+      projectId || '156'
+    ].map(task => {
+      return (
+        <Select.Option value={task.task_id} key={task.task_id}>
+          {task.name}
+        </Select.Option>
+      );
+    });
+
     return (
       <TimeEntryCard
         timerData={timerObj[key]}
         active={activeTimer === key}
         key={key}
-        onProjectChange={project => {
-          const id = key;
-          console.log(project);
-          console.log(key);
-          console.log(id);
-          // update timer object to set project for Id
-          // set timer obj
-        }}
+        projectList={projectListPicklist}
+        taskList={taskListPicklist}
         onTimerDelete={() => {
           handleTimerDelete(key);
         }}

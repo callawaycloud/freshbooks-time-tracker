@@ -1,4 +1,6 @@
-interface KeyMap<T> {
+import { Task } from './freshbookClient';
+
+export interface KeyMap<T> {
   [key: string]: T;
 }
 
@@ -19,6 +21,8 @@ export interface FieldEntry {
 }
 
 export type TimerState = KeyMap<TimerEntry>;
+
+export type ProjectTaskState = KeyMap<Task[]>;
 
 export function newTimer(state: TimerState, newTempId: string) {
   const tempState = { ...state };

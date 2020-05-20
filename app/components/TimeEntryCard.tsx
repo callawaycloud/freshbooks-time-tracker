@@ -10,6 +10,7 @@ import { ButtonProps } from 'antd/lib/button';
 import * as React from 'react';
 import { FieldEntry, TimerEntry } from '../lib/timerState';
 import { DisplayElapsedTime } from './DisplayElapsedTime';
+// import { Project } from '../lib/freshbookClient';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -17,12 +18,13 @@ const { TextArea } = Input;
 export function TimeEntryCard(props: {
   timerData: TimerEntry;
   active: boolean;
-  onProjectChange: (project: string) => void;
   onTimerDelete: () => void;
   onTimerPause: () => void;
   onTimerContinue: () => void;
   onFieldUpdate: (obj: FieldEntry) => void;
   onTimerSave: () => void;
+  projectList: JSX.Element[];
+  taskList: JSX.Element[];
 }) {
   const dateFormatted = props.timerData.date
     ? props.timerData.date.toString().slice(0, -14)
@@ -68,12 +70,7 @@ export function TimeEntryCard(props: {
                 })
               }
             >
-              <Option value="jack">Jack</Option>
-              <Option value="lucy">Lucy</Option>
-              <Option value="disabled" disabled>
-                Disabled
-              </Option>
-              <Option value="Yiminghe">yiminghe</Option>
+              {props.projectList}
             </Select>
             <Select
               defaultValue={props.timerData.task}
@@ -85,12 +82,7 @@ export function TimeEntryCard(props: {
                 })
               }
             >
-              <Option value="jack">Jack</Option>
-              <Option value="lucy">Lucy</Option>
-              <Option value="disabled" disabled>
-                Disabled
-              </Option>
-              <Option value="Yiminghe">yiminghe</Option>
+              {props.taskList}
             </Select>
           </Col>
           <Col span={12}>
