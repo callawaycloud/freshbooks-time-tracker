@@ -1,3 +1,6 @@
+// eslint-disable-next-line import/no-cycle
+import moment from 'antd/node_modules/moment';
+// eslint-disable-next-line import/no-cycle
 import { Task } from './freshbookClient';
 
 export interface KeyMap<T> {
@@ -12,7 +15,7 @@ export interface TimerEntry {
   notes?: string;
   freshbooksId?: string;
   unsavedChanges?: boolean;
-  date?: Date;
+  date?: string;
 }
 
 export interface FieldEntry {
@@ -30,7 +33,7 @@ export function newTimer(state: TimerState, newTempId: string) {
     count: 0,
     roundedCount: 0,
     unsavedChanges: true,
-    date: new Date()
+    date: moment().format('YYYY-MM-DD')
   };
   return tempState;
 }

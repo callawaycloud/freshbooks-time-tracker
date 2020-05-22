@@ -10,6 +10,7 @@ import { ButtonProps } from 'antd/lib/button';
 import * as React from 'react';
 import { FieldEntry, TimerEntry } from '../lib/timerState';
 import { DisplayElapsedTime } from './DisplayElapsedTime';
+import { Project } from '../lib/freshbookClient';
 // import { Project } from '../lib/freshbookClient';
 
 const { Option } = Select;
@@ -23,8 +24,8 @@ export function TimeEntryCard(props: {
   onTimerContinue: () => void;
   onFieldUpdate: (obj: FieldEntry) => void;
   onTimerSave: () => void;
-  projectList: JSX.Element[];
-  taskList: JSX.Element[];
+  projectList: Project[];
+  // taskList: JSX.Element[];
 }) {
   const dateFormatted = props.timerData.date
     ? props.timerData.date.toString().slice(0, -14)
@@ -38,6 +39,31 @@ export function TimeEntryCard(props: {
   ) : (
     ''
   );
+
+  const projectListPicklist: JSX.Element[] = props.projectList.map(key => {
+    return (
+      <Select.Option value={key.project_id} key={key.project_id}>
+        {key.name}
+      </Select.Option>
+    );
+  });
+
+  let taskListPicklist: JSX.Element[] | undefined = [];
+
+  if (props.timerData.project) {
+    taskListPicklist = props.projectList
+      .find(
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        ({ project_id }) => project_id === props.timerData.project
+      )
+      ?.tasks.map(key => {
+        return (
+          <Select.Option value={key.task_id} key={key.task_id}>
+            {key.name}
+          </Select.Option>
+        );
+      });
+  }
 
   return (
     <Card style={{ textAlign: 'center', margin: '15px' }}>
@@ -70,7 +96,7 @@ export function TimeEntryCard(props: {
                 })
               }
             >
-              {props.projectList}
+              {projectListPicklist}
             </Select>
             <Select
               defaultValue={props.timerData.task}
@@ -82,7 +108,7 @@ export function TimeEntryCard(props: {
                 })
               }
             >
-              {props.taskList}
+              {taskListPicklist}
             </Select>
           </Col>
           <Col span={12}>
@@ -119,7 +145,6 @@ function TimeEntryActions(props: {
   onTimerSave: () => void;
   notSavedToFreshbooks: boolean;
 }) {
-  console.log(props.notSavedToFreshbooks);
   const pauseOrPlayProps: ButtonProps = props.active
     ? {
         icon: <PauseOutlined />,

@@ -14,18 +14,16 @@ import {
   newTimer,
   removeTimer,
   TimerEntry,
-  TimerState,
-  ProjectTaskState
+  TimerState
 } from '../lib/timerState';
 import { useInterval } from '../lib/useInterval';
 import { useLocalStorage } from '../lib/useLocalStorage';
 import {
-  testIntegration,
   Project,
   retrieveProjects,
-  retrieveTasks,
-  Task,
-  retrieveProjectTasks
+  retrieveTimeEntries,
+  updateTimeEntry,
+  createTimeEntry
 } from '../lib/freshbookClient';
 // import { testIntegration } from "./lib/freshbookClient";
 
@@ -55,62 +53,33 @@ function App() {
 
   const [projectList, setProjecList] = useState<Project[]>([]);
 
-  const [taskList, setTaskList] = useState<Task[]>([]);
+  // const [taskList, setTaskList] = useState<Task[]>([]);
 
-  const [projectTasksMap, setProjectTasksMap] = useState<ProjectTaskState>({});
+  // const [projectTasksMap, setProjectTasksMap] = useState<ProjectTaskState>({});
 
   useEffect(() => {
     // setInitialLoad(true);
     async function retrieveFreshbookData() {
       let tempTimerObj = { ...timerObj };
       tempTimerObj = { ...tempTimerObj, ...localStorageTimers };
-      setTimerObj(tempTimerObj);
 
       try {
         const projects = await retrieveProjects(apiURL, freshbookToken);
-        const tasks = await retrieveTasks(apiURL, freshbookToken);
-
-        const projectTaskMapClone = { ...projectTasksMap };
-
-        const testThis = await retrieveProjectTasks(
+        setProjecList(projects);
+        tempTimerObj = await retrieveTimeEntries(
           apiURL,
           freshbookToken,
-          projects
+          tempTimerObj
         );
-
-        console.log(testThis);
-
-        /* projects.forEach(async project => {
-          // eslint-disable-next-line no-param-reassign
-          project.tasks = await retrieveProjectTasks(
-            apiURL,
-            freshbookToken,
-            projects
-          );
-          console.log(project);
-          // const projectTaskMapClone = { ...projectTasksMap };
-          console.log('here', projectTaskMapClone);
-          projectTaskMapClone[project.project_id] = project.tasks;
-          setProjectTasksMap({ ...projectTaskMapClone });
-        }); */
-
-        /* projectTasksMap = projects.map(proj => {
-          return \
-        }); */
-
-
-
-        setProjecList(projects);
-        setTaskList(tasks);
-        setProjectTasksMap(testThis);
       } catch (e) {
         message.error(e.toString());
         console.log(e);
       }
+      setTimerObj(tempTimerObj);
     }
     retrieveFreshbookData();
   }, []);
-  console.log(projectTasksMap);
+  // console.log(projectTasksMap);
 
   useInterval(() => {
     incrementTimer(timerObj, activeTimer, setTimerObj);
@@ -124,7 +93,6 @@ function App() {
       TEMP_ID_PREFIX + new Date().getUTCMilliseconds().toString();
     setTimerObj(newTimer(timerObj, newTempId));
     setActiveTimer(newTempId);
-    // testIntegration();
   };
 
   const handleFieldUpdate = (obj: FieldEntry, key: string) => {
@@ -137,15 +105,43 @@ function App() {
 
   const saveTimeEntry = (key: string) => {
     const tempTimerObj = { ...timerObj };
-    const tempTimeEntry: TimerEntry = tempTimerObj[key];
+    let tempTimeEntry: TimerEntry = tempTimerObj[key];
     tempTimeEntry.unsavedChanges = false;
 
-    if (!tempTimeEntry.freshbooksId) {
+    /* if (!tempTimeEntry.freshbooksId) {
       tempTimeEntry.freshbooksId = key;
+    } */
+
+    if (activeTimer === key) {
+      setActiveTimer(undefined);
     }
 
-    setTimerObj(tempTimerObj);
-    setLocalStorageTimers(tempTimerObj);
+    async function saveTimerEntryToFB() {
+      try {
+        if (tempTimeEntry.freshbooksId) {
+          tempTimeEntry = await updateTimeEntry(
+            apiURL,
+            freshbookToken,
+            tempTimeEntry
+          );
+        } else {
+          tempTimeEntry = await createTimeEntry(
+            apiURL,
+            freshbookToken,
+            tempTimeEntry
+          );
+        }
+        console.log(tempTimeEntry);
+        tempTimerObj[key] = tempTimeEntry;
+      } catch (e) {
+        message.error(e.toString());
+        console.log(e);
+      }
+      console.log(tempTimerObj);
+      setTimerObj(tempTimerObj);
+      setLocalStorageTimers(tempTimerObj);
+    }
+    saveTimerEntryToFB();
   };
 
   const handleTimerDelete = (key: string) => {
@@ -172,49 +168,13 @@ function App() {
     }
   };
 
-  // testIntegration(apiURL, freshbookToken);
-
-  const projectListPicklist: JSX.Element[] = projectList.map(key => {
-    return (
-      <Select.Option value={key.project_id} key={key.project_id}>
-        {key.name}
-      </Select.Option>
-    );
-  });
-
   const timerDisplay: JSX.Element[] = Object.keys(timerObj).map(key => {
-    // let taskListPicklistToShow: Task[] | JSX.Element[] = [];
-
-    /* if (timerObj[key].project) {
-      const projectId = timerObj[key].project ? timerObj[key].project : '';
-      taskListPicklistToShow = projectTasksMap[projectId || ''];
-    } */
-
-    console.log(projectTasksMap);
-
-    if (Object.keys(projectTasksMap).length === 0) {
-      return <div></div>;
-    }
-
-    const projectId = timerObj[key].project ? timerObj[key].project : '';
-
-    const taskListPicklist: JSX.Element[] = projectTasksMap[
-      projectId || '156'
-    ].map(task => {
-      return (
-        <Select.Option value={task.task_id} key={task.task_id}>
-          {task.name}
-        </Select.Option>
-      );
-    });
-
     return (
       <TimeEntryCard
         timerData={timerObj[key]}
         active={activeTimer === key}
         key={key}
-        projectList={projectListPicklist}
-        taskList={taskListPicklist}
+        projectList={projectList}
         onTimerDelete={() => {
           handleTimerDelete(key);
         }}
