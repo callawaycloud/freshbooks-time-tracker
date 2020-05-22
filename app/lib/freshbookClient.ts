@@ -1,6 +1,6 @@
 import moment from 'moment';
 // eslint-disable-next-line import/no-cycle
-import { TimerState, TimerEntry } from './timerState';
+import { TimerState, TimerEntry, KeyMap } from './timerState';
 
 const FreshBooks = require('freshbooks-api');
 
@@ -16,12 +16,21 @@ export interface Project {
   project_id: string;
   name: string;
   tasks: Task[];
+  client_id: string;
 }
 
 export interface Task {
   task_id: string;
   name: string;
 }
+
+export interface Client {
+  client_id: string;
+  name: string;
+  projects: Project[];
+}
+
+export type ClientMap = KeyMap<Client[]>;
 
 export const testThis: FreshbookXMLRequest = { xmlString: '' };
 
@@ -123,7 +132,8 @@ export function retrieveTimeEntries(
               freshbooksId: entry.time_entry_id,
               unsavedChanges: false,
               date: entry.date,
-              task: entry.task_id
+              task: entry.task_id,
+              countLoggedinFreshbook: entryCount
             };
             console.log(entryData);
             timerStateClone[entry.time_entry_id] = entryData;
@@ -133,6 +143,49 @@ export function retrieveTimeEntries(
         resolve(timerStateClone);
       }
     );
+  });
+}
+
+export function retrieveClients(
+  apiUrl: string | undefined,
+  apiToken: string | undefined
+): Promise<ClientMap> {
+  return new Promise((resolve, reject) => {
+    const freshbooks = new FreshBooks(apiUrl, apiToken);
+
+    freshbooks.client.list({ per_page: 50 }, function(
+      err: any,
+      clients: any,
+      metaData: any
+    ) {
+      if (err) {
+        reject(err);
+      }
+
+      console.log(clients);
+
+      const clientMap: ClientMap = clients
+        // .filter((client: any) => client.folder === 'active')
+        .reduce(
+          (
+            obj: { [x: string]: Client },
+            client: { client_id: string; organization: any }
+          ) => {
+            // eslint-disable-next-line no-param-reassign
+            obj[client.client_id] = {
+              client_id: client.client_id,
+              name: client.organization,
+              projects: []
+            };
+            return obj;
+          },
+          {}
+        );
+
+      console.log(clientMap);
+
+      resolve(clientMap);
+    });
   });
 }
 
@@ -182,6 +235,8 @@ export function retrieveProjects(
         reject(err);
       }
 
+      console.log(projects);
+
       // eslint-disable-next-line no-restricted-syntax
       for (const project of projects) {
         // eslint-disable-next-line no-await-in-loop
@@ -193,7 +248,8 @@ export function retrieveProjects(
         projectList.push({
           project_id: project.project_id,
           name: project.name,
-          tasks: taskList
+          tasks: taskList,
+          client_id: project.client_id
         });
       }
 
@@ -235,9 +291,8 @@ export function createTimeEntry(
         }
         const tempTimerEntry = { ...timerEntry };
 
-        console.log(result);
-
         tempTimerEntry.freshbooksId = result.time_entry_id;
+        tempTimerEntry.countLoggedinFreshbook = tempTimerEntry.roundedCount;
         console.log(tempTimerEntry);
 
         resolve(tempTimerEntry);
@@ -266,10 +321,11 @@ export function updateTimeEntry(
         if (err) {
           reject(err);
         }
+        const tempTimerEntry = { ...timerEntry };
 
-        console.log(result);
+        tempTimerEntry.countLoggedinFreshbook = tempTimerEntry.roundedCount;
 
-        resolve(timerEntry);
+        resolve(tempTimerEntry);
       }
     );
   });

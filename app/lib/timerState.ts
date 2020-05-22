@@ -10,6 +10,7 @@ export interface KeyMap<T> {
 export interface TimerEntry {
   count: number;
   roundedCount: number;
+  countLoggedinFreshbook?: number;
   project?: string;
   task?: string;
   notes?: string;

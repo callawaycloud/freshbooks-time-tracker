@@ -23,7 +23,9 @@ import {
   retrieveProjects,
   retrieveTimeEntries,
   updateTimeEntry,
-  createTimeEntry
+  createTimeEntry,
+  retrieveClients,
+  Client
 } from '../lib/freshbookClient';
 // import { testIntegration } from "./lib/freshbookClient";
 
@@ -53,18 +55,44 @@ function App() {
 
   const [projectList, setProjecList] = useState<Project[]>([]);
 
-  // const [taskList, setTaskList] = useState<Task[]>([]);
-
-  // const [projectTasksMap, setProjectTasksMap] = useState<ProjectTaskState>({});
+  const [clientList, setClientList] = useState<Client[]>([]);
 
   useEffect(() => {
     // setInitialLoad(true);
     async function retrieveFreshbookData() {
+      const filteredLocalStorageTimers = Object.keys({ ...localStorageTimers })
+        .filter(
+          key =>
+            localStorageTimers[key].date == moment().format('YYYY-MM-DD') ||
+            localStorageTimers[key].unsavedChanges == true
+        )
+        .reduce((obj, key) => {
+          obj[key] = localStorageTimers[key];
+          return obj;
+        }, {});
+
       let tempTimerObj = { ...timerObj };
-      tempTimerObj = { ...tempTimerObj, ...localStorageTimers };
+      tempTimerObj = { ...tempTimerObj, ...filteredLocalStorageTimers };
+
+      console.log(tempTimerObj);
 
       try {
+        const clients = await retrieveClients(apiURL, freshbookToken);
+
         const projects = await retrieveProjects(apiURL, freshbookToken);
+
+        console.log(clients);
+
+        projects.forEach((project: Project) => {
+          if (project) {
+            console.log(project.client_id);
+            // Note for Charlie - I am eventually going to use this to build the picklist for the Projects FYI
+            // clients[project.client_id].projects.push(project);
+          }
+        });
+
+        console.log(clients);
+
         setProjecList(projects);
         tempTimerObj = await retrieveTimeEntries(
           apiURL,
@@ -76,6 +104,7 @@ function App() {
         console.log(e);
       }
       setTimerObj(tempTimerObj);
+      setLocalStorageTimers(tempTimerObj);
     }
     retrieveFreshbookData();
   }, []);
