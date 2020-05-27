@@ -38,12 +38,9 @@ import {
   Client,
   ClientMap
 } from '../lib/freshbookClient';
-// import { testIntegration } from "./lib/freshbookClient";
 
 export const TEMP_ID_PREFIX = 'tmp-';
 const todaysDate = moment().format('MMMM Do, YYYY');
-
-// const projectTasksMap: ProjectTaskState = {};
 
 function App() {
   const [showSpinner, setShowSpinner] = useState<boolean>(true);
@@ -74,12 +71,13 @@ function App() {
     const filteredLocalStorageTimers = Object.keys({ ...localStorageTimers })
       .filter(
         key =>
-          localStorageTimers[key].date == moment().format('YYYY-MM-DD') ||
-          localStorageTimers[key].unsavedChanges == true
+          localStorageTimers[key].date === moment().format('YYYY-MM-DD') ||
+          localStorageTimers[key].unsavedChanges === true
       )
       .reduce((obj, key) => {
-        obj[key] = localStorageTimers[key];
-        return obj;
+        const objClone: any = { ...obj };
+        objClone[key] = localStorageTimers[key];
+        return objClone;
       }, {});
 
     let tempTimerObj = { ...timerObj };
@@ -96,17 +94,13 @@ function App() {
 
       projects.forEach((project: Project) => {
         if (project) {
-          console.log(project.client_id);
-          // Note for Charlie - I am eventually going to use this to build the picklist for the Projects FYI
           clients[project.client_id].projects.push(project);
         }
       });
 
       setClientMap(clients);
-
-      console.log(clients);
-
       setProjecList(projects);
+
       tempTimerObj = await retrieveTimeEntries(
         apiURL,
         freshbookToken,
@@ -122,18 +116,7 @@ function App() {
     setShowSpinner(false);
   };
 
-  /* useEffect(() => {
-    // setInitialLoad(true);
-    function retrieveFreshbookData() {
-      refreshAppdata();
-    }
-    retrieveFreshbookData();
-  }, []); */
-  // console.log(projectTasksMap);
-
   useEffect(() => {
-    // setInitialLoad(true);
-
     async function retrieveFreshbookData() {
       refreshAppdata();
     }
@@ -172,10 +155,6 @@ function App() {
     const tempTimerObj = { ...timerObj };
     let tempTimeEntry: TimerEntry = tempTimerObj[key];
     tempTimeEntry.unsavedChanges = false;
-
-    /* if (!tempTimeEntry.freshbooksId) {
-      tempTimeEntry.freshbooksId = key;
-    } */
 
     if (activeTimer === key) {
       setActiveTimer(undefined);
@@ -353,38 +332,3 @@ function App() {
 }
 
 export default App;
-
-/*
-
-<Drawer
-        title="Settings"
-        placement="right"
-        closable={true}
-        onClose={() => {
-          setShowSettings(false);
-          return showSettings;
-        }}
-        visible={showSettings}
-        width={500}
-      >
-        <Input
-          value={apiURL}
-          key="apiUrlInputKey"
-          onChange={(e) => {
-            setApiUrl(e.target.value);
-          }}
-          addonBefore="API URL"
-        />
-        <br />
-        <br />
-        <Input
-          key="tokenInputKey"
-          value={freshbookToken}
-          onChange={(e) => {
-            setFreshbookToken(e.target.value);
-          }}
-          addonBefore="Authentication Token"
-        />
-      </Drawer>
-
-      */

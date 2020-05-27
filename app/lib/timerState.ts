@@ -69,8 +69,3 @@ export function removeTimer(state: TimerState, timerId: string) {
 
   return tempState;
 }
-
-/* export function updateFieldValue(state: TimerState, timerId: string) {
-  let tempState = { ...state };
-  return tempState;
-} */

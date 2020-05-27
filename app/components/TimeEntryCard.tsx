@@ -11,8 +11,11 @@ import { ButtonProps } from 'antd/lib/button';
 import * as React from 'react';
 import { FieldEntry, TimerEntry } from '../lib/timerState';
 import { DisplayElapsedTime } from './DisplayElapsedTime';
-import { Project, ClientMap } from '../lib/freshbookClient';
-// import { Project } from '../lib/freshbookClient';
+import {
+  Project,
+  ClientMap,
+  openLinkToFreshbookEntry
+} from '../lib/freshbookClient';
 
 const { Option, OptGroup } = Select;
 const { TextArea } = Input;
@@ -27,32 +30,23 @@ export function TimeEntryCard(props: {
   onTimerSave: () => void;
   projectList: Project[];
   clients: ClientMap;
-  // taskList: JSX.Element[];
 }) {
   const dateFormatted = props.timerData.date;
 
   const hrefLink = `https://callawaycloudconsulting.freshbooks.com/timesheet#date/${dateFormatted}/edit/${props.timerData.freshbooksId}`;
 
-  function myFunction(event) {
-    const { shell } = require('electron');
-    event.preventDefault();
-    shell.openExternal(hrefLink);
-  }
   const linkToFreshbook = props.timerData.freshbooksId ? (
-    <Button type="link" target="_blank" onClick={myFunction} href={hrefLink}>
+    <Button
+      type="link"
+      target="_blank"
+      onClick={e => openLinkToFreshbookEntry(e, hrefLink)}
+      href={hrefLink}
+    >
       View in Freshbooks
     </Button>
   ) : (
     ''
   );
-
-  /* const projectListPicklist: JSX.Element[] = props.projectList.map(key => {
-    return (
-      <Select.Option value={key.project_id} key={key.project_id}>
-        {key.name}
-      </Select.Option>
-    );
-  }); */
 
   const projectListPicklist: JSX.Element[] | null = Object.values(
     props.clients
@@ -70,8 +64,6 @@ export function TimeEntryCard(props: {
         </Option>
       );
     });
-
-    // clientProjectPicklist
 
     return (
       <OptGroup label={key.name} key={key.name}>
@@ -183,7 +175,6 @@ export function TimeEntryCard(props: {
   );
 }
 
-// include Delete Button here!
 function TimeEntryActions(props: {
   active: boolean;
   onTimerPause: () => void;

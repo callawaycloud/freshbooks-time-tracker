@@ -3,6 +3,7 @@ import moment from 'moment';
 import { TimerState, TimerEntry, KeyMap } from './timerState';
 
 const FreshBooks = require('freshbooks-api');
+const { shell } = require('electron');
 
 export interface FreshbookClient {
   token: string;
@@ -30,66 +31,16 @@ export interface Client {
   projects: Project[];
 }
 
-export type ClientMap = KeyMap<Client[]>;
+export type ClientMap = KeyMap<Client>;
 
 export const testThis: FreshbookXMLRequest = { xmlString: '' };
 
-// const apiUrl = 'https://callawaycloudconsulting.freshbooks.com/api/2.1/xml-in';
-// const apiToken = '975952a803084cc449a863c5f80941f9';
-
-export function testIntegration(
-  apiUrl: string | undefined,
-  apiToken: string | undefined
+export function openLinkToFreshbookEntry(
+  event: React.MouseEvent<HTMLElement, MouseEvent>,
+  entryURL: string
 ) {
-  /* var freshbooks = new FreshBooks(apiUrl, apiToken),
-    timeEntryList = new freshbooks.Time_Entry(); */
-  // console.log(timeEntryList.list);
-
-  /* invoice.get(invoice_id, function (err, invoice) {
-    if (err) {
-      //returns if an error has occured, ie invoice_id doesn't exist.
-      console.log(err);
-    } else {
-      console.log("Invoice Number:" + invoice.number);
-    }
-  }); */
-
-  const freshbooks = new FreshBooks(apiUrl, apiToken);
-
-  freshbooks.time_entry.list(
-    {
-      date_from: moment().format('YYYY-MM-DD'),
-      date_to: moment().format('YYYY-MM-DD')
-    },
-    function(err: any, timeEntries: any, metaData: any) {
-      console.log(err);
-      console.log(timeEntries);
-      /* do things */
-    }
-  );
-
-  freshbooks.project.list({ per_page: 50 }, function(
-    err: any,
-    projects: any,
-    metaData: any
-  ) {
-    // console.log(err);
-    // console.log(projects);
-    // console.log(metaData);
-    /* do things */
-  });
-
-  freshbooks.task.list({ per_page: 50 }, function(
-    err: any,
-    projects: any,
-    metaData: any
-  ) {
-    console.log(projects);
-    // console.log(err);
-    // console.log(projects);
-    // console.log(metaData);
-    /* do things */
-  });
+  event.preventDefault();
+  shell.openExternal(entryURL);
 }
 
 export function retrieveTimeEntries(
@@ -111,18 +62,13 @@ export function retrieveTimeEntries(
         }
         const timerStateClone = { ...timerState };
 
-        console.log(timerStateClone);
-
         const timerEntryArray: TimerEntry[] = Object.values(timerStateClone);
 
         // eslint-disable-next-line no-restricted-syntax
         for (const entry of timeEntries) {
-          console.log(entry);
           const localEntryData = timerEntryArray.find(
             ({ freshbooksId }) => freshbooksId === entry.time_entry_id
           );
-          console.log(localEntryData);
-          // if (!localEntryData || !localEntryData.unsavedChanges) {
           const entryCount = entry.hours * 60 * 60;
           const entryData: TimerEntry = {
             localId: entry.time_entry_id,
@@ -136,7 +82,6 @@ export function retrieveTimeEntries(
             task: entry.task_id,
             countLoggedinFreshbook: entryCount
           };
-          console.log(entryData);
           if (!localEntryData) {
             timerStateClone[entry.time_entry_id] = entryData;
           } else if (
@@ -146,7 +91,6 @@ export function retrieveTimeEntries(
             entryData.localId = localEntryData.localId;
             timerStateClone[localEntryData.localId] = entryData;
           }
-          // }
         }
 
         resolve(timerStateClone);
@@ -171,27 +115,21 @@ export function retrieveClients(
         reject(err);
       }
 
-      console.log(clients);
-
-      const clientMap: ClientMap = clients
-        // .filter((client: any) => client.folder === 'active')
-        .reduce(
-          (
-            obj: { [x: string]: Client },
-            client: { client_id: string; organization: any }
-          ) => {
-            // eslint-disable-next-line no-param-reassign
-            obj[client.client_id] = {
-              client_id: client.client_id,
-              name: client.organization,
-              projects: []
-            };
-            return obj;
-          },
-          {}
-        );
-
-      console.log(clientMap);
+      const clientMap: ClientMap = clients.reduce(
+        (
+          obj: { [x: string]: Client },
+          client: { client_id: string; organization: any }
+        ) => {
+          // eslint-disable-next-line no-param-reassign
+          obj[client.client_id] = {
+            client_id: client.client_id,
+            name: client.organization,
+            projects: []
+          };
+          return obj;
+        },
+        {}
+      );
 
       resolve(clientMap);
     });
@@ -213,7 +151,6 @@ export function retrieveTasks(
       tasks: any,
       metaData: any
     ) {
-      // reject(new Error('error here'));
       if (err) {
         reject(err);
       }
@@ -240,11 +177,9 @@ function taskPromise(
       tasks: any,
       metaData: any
     ) {
-      // reject(new Error('error here'));
       if (err) {
         reject(err);
       }
-      console.log('tasks', tasks);
       const taskList: Task[] = [];
       tasks.forEach((task: { task_id: any; name: any }) => {
         taskList.push({ task_id: task.task_id, name: task.name });
@@ -294,7 +229,6 @@ export function retrieveProjects(
       projects: any,
       metaData: any
     ) {
-      // reject(new Error('error here'));
       if (err) {
         reject(err);
       }
@@ -304,16 +238,9 @@ export function retrieveProjects(
         apiToken,
         projects
       );
-      console.log('here', projectTask);
 
       // eslint-disable-next-line no-restricted-syntax
       for (const project of projects) {
-        // eslint-disable-next-line no-await-in-loop
-        /* const taskList: Task[] = await retrieveTasks(
-          apiUrl,
-          apiToken,
-          project.project_id
-        ); */
         const taskForProject = projectTask[project.project_id];
         projectList.push({
           project_id: project.project_id,
@@ -322,19 +249,6 @@ export function retrieveProjects(
           client_id: project.client_id
         });
       }
-
-      /* projects.forEach(async (proj: { project_id: any; name: any }) => {
-        const taskList: Task[] = await retrieveTasks(
-          apiUrl,
-          apiToken,
-          proj.project_id
-        );
-        projectList.push({
-          project_id: proj.project_id,
-          name: proj.name,
-          tasks: taskList
-        });
-      }); */
       resolve(projectList);
     });
   });
