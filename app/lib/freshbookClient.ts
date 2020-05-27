@@ -118,7 +118,7 @@ export function retrieveClients(
       const clientMap: ClientMap = clients.reduce(
         (
           obj: { [x: string]: Client },
-          client: { client_id: string; organization: any }
+          client: { client_id: string; organization: string }
         ) => {
           // eslint-disable-next-line no-param-reassign
           obj[client.client_id] = {

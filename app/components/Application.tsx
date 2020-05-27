@@ -83,14 +83,10 @@ function App() {
     let tempTimerObj = { ...timerObj };
     tempTimerObj = { ...tempTimerObj, ...filteredLocalStorageTimers };
 
-    console.log(tempTimerObj);
-
     try {
       const clients = await retrieveClients(apiURL, freshbookToken);
 
       const projects = await retrieveProjects(apiURL, freshbookToken);
-
-      console.log(clients);
 
       projects.forEach((project: Project) => {
         if (project) {
