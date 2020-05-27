@@ -8,6 +8,7 @@ export interface KeyMap<T> {
 }
 
 export interface TimerEntry {
+  localId: string;
   count: number;
   roundedCount: number;
   countLoggedinFreshbook?: number;
@@ -31,6 +32,7 @@ export type ProjectTaskState = KeyMap<Task[]>;
 export function newTimer(state: TimerState, newTempId: string) {
   const tempState = { ...state };
   tempState[newTempId] = {
+    localId: newTempId,
     count: 0,
     roundedCount: 0,
     unsavedChanges: true,

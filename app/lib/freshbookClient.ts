@@ -122,22 +122,31 @@ export function retrieveTimeEntries(
             ({ freshbooksId }) => freshbooksId === entry.time_entry_id
           );
           console.log(localEntryData);
+          // if (!localEntryData || !localEntryData.unsavedChanges) {
+          const entryCount = entry.hours * 60 * 60;
+          const entryData: TimerEntry = {
+            localId: entry.time_entry_id,
+            count: entryCount,
+            roundedCount: entryCount,
+            project: entry.project_id,
+            notes: entry.notes,
+            freshbooksId: entry.time_entry_id,
+            unsavedChanges: false,
+            date: entry.date,
+            task: entry.task_id,
+            countLoggedinFreshbook: entryCount
+          };
+          console.log(entryData);
           if (!localEntryData) {
-            const entryCount = entry.hours * 60 * 60;
-            const entryData: TimerEntry = {
-              count: entryCount,
-              roundedCount: entryCount,
-              project: entry.project_id,
-              notes: entry.notes,
-              freshbooksId: entry.time_entry_id,
-              unsavedChanges: false,
-              date: entry.date,
-              task: entry.task_id,
-              countLoggedinFreshbook: entryCount
-            };
-            console.log(entryData);
             timerStateClone[entry.time_entry_id] = entryData;
+          } else if (
+            !localEntryData.unsavedChanges ||
+            localEntryData.roundedCount < entryData.roundedCount
+          ) {
+            entryData.localId = localEntryData.localId;
+            timerStateClone[localEntryData.localId] = entryData;
           }
+          // }
         }
 
         resolve(timerStateClone);
@@ -255,16 +264,15 @@ export async function retrieveProjectTasks(
 
   // eslint-disable-next-line no-restricted-syntax
   for (const project of projects) {
-    console.log(project);
     // eslint-disable-next-line no-await-in-loop
     promises.push(taskPromise(apiUrl, apiToken, project.project_id));
   }
 
   return Promise.all(promises)
     .then(response => {
-      console.log(response);
       return response.reduce((projectTaskMap, item) => {
         const keyOfObject = Object.keys(item)[0];
+        // eslint-disable-next-line no-param-reassign
         projectTaskMap[keyOfObject] = item[keyOfObject];
         return projectTaskMap;
       });
@@ -290,8 +298,6 @@ export function retrieveProjects(
       if (err) {
         reject(err);
       }
-
-      console.log(projects);
 
       const projectTask = await retrieveProjectTasks(
         apiUrl,
@@ -357,7 +363,6 @@ export function createTimeEntry(
 
         tempTimerEntry.freshbooksId = result.time_entry_id;
         tempTimerEntry.countLoggedinFreshbook = tempTimerEntry.roundedCount;
-        console.log(tempTimerEntry);
 
         resolve(tempTimerEntry);
       }

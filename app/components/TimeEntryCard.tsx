@@ -3,7 +3,8 @@ import {
   DeleteOutlined,
   PauseOutlined,
   PlayCircleOutlined,
-  SaveOutlined
+  SaveOutlined,
+  CloseOutlined
 } from '@ant-design/icons';
 import { Button, Card, Col, Input, Row, Select, InputNumber } from 'antd';
 import { ButtonProps } from 'antd/lib/button';
@@ -30,13 +31,9 @@ export function TimeEntryCard(props: {
 }) {
   const dateFormatted = props.timerData.date;
 
-  console.log(dateFormatted);
-
   const hrefLink = `https://callawaycloudconsulting.freshbooks.com/timesheet#date/${dateFormatted}/edit/${props.timerData.freshbooksId}`;
 
-  console.log(props.timerData);
   function myFunction(event) {
-    console.log(event);
     const { shell } = require('electron');
     event.preventDefault();
     shell.openExternal(hrefLink);
@@ -124,7 +121,7 @@ export function TimeEntryCard(props: {
             <Select
               placeholder="Select a Project"
               key="selectedProject"
-              defaultValue={props.timerData.project}
+              value={props.timerData.project}
               style={{ width: '80%', marginTop: 10 }}
               onChange={value =>
                 props.onFieldUpdate({ project: value, task: undefined })
@@ -150,7 +147,7 @@ export function TimeEntryCard(props: {
               rows={3}
               style={{ marginTop: 10 }}
               placeholder="Notes....."
-              defaultValue={props.timerData.notes}
+              value={props.timerData.notes}
               onChange={event =>
                 props.onFieldUpdate({
                   notes: event.target.value
@@ -162,20 +159,16 @@ export function TimeEntryCard(props: {
         <div>
           Time to log in Freshbook:
           <InputNumber
+            type="number"
             min={0}
             step={0.25}
             value={props.timerData.roundedCount / 3600}
-            onChange={value => {
-              console.log(value);
-              console.log(value);
-              if (value === '.') {
-                value = 0.0;
-              }
+            onChange={value =>
               props.onFieldUpdate({
                 count: value ? value * 3600 : 0,
                 roundedCount: value ? value * 3600 : 0
-              });
-            }}
+              })
+            }
           />
         </div>
         <div>
@@ -237,7 +230,9 @@ function TimeEntryActions(props: {
       {saveButton}
       <Button
         type="primary"
-        icon={<DeleteOutlined />}
+        icon={
+          props.notSavedToFreshbooks ? <DeleteOutlined /> : <CloseOutlined />
+        }
         size="large"
         onClick={props.onTimerDelete}
         danger

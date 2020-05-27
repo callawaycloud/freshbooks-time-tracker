@@ -1,9 +1,19 @@
 import {
   ClockCircleOutlined,
   PlusOutlined,
-  SettingOutlined
+  SettingOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
-import { Alert, Button, Card, Layout, Select, message } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Layout,
+  Select,
+  message,
+  Tooltip,
+  Spin
+} from 'antd';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import { SettingsDrawer } from './SettingsDrawer';
@@ -36,6 +46,8 @@ const todaysDate = moment().format('MMMM Do, YYYY');
 // const projectTasksMap: ProjectTaskState = {};
 
 function App() {
+  const [showSpinner, setShowSpinner] = useState<boolean>(true);
+
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const [activeTimer, setActiveTimer] = useState<string | undefined>(undefined);
@@ -58,60 +70,79 @@ function App() {
 
   const [clientMap, setClientMap] = useState<ClientMap>({});
 
-  useEffect(() => {
+  const refreshAppdata = async () => {
+    const filteredLocalStorageTimers = Object.keys({ ...localStorageTimers })
+      .filter(
+        key =>
+          localStorageTimers[key].date == moment().format('YYYY-MM-DD') ||
+          localStorageTimers[key].unsavedChanges == true
+      )
+      .reduce((obj, key) => {
+        obj[key] = localStorageTimers[key];
+        return obj;
+      }, {});
+
+    let tempTimerObj = { ...timerObj };
+    tempTimerObj = { ...tempTimerObj, ...filteredLocalStorageTimers };
+
+    console.log(tempTimerObj);
+
+    try {
+      const clients = await retrieveClients(apiURL, freshbookToken);
+
+      const projects = await retrieveProjects(apiURL, freshbookToken);
+
+      console.log(clients);
+
+      projects.forEach((project: Project) => {
+        if (project) {
+          console.log(project.client_id);
+          // Note for Charlie - I am eventually going to use this to build the picklist for the Projects FYI
+          clients[project.client_id].projects.push(project);
+        }
+      });
+
+      setClientMap(clients);
+
+      console.log(clients);
+
+      setProjecList(projects);
+      tempTimerObj = await retrieveTimeEntries(
+        apiURL,
+        freshbookToken,
+        tempTimerObj
+      );
+    } catch (e) {
+      message.error(e.toString());
+      console.log(e);
+    }
+
+    setTimerObj(tempTimerObj);
+    setLocalStorageTimers(tempTimerObj);
+    setShowSpinner(false);
+  };
+
+  /* useEffect(() => {
     // setInitialLoad(true);
-    async function retrieveFreshbookData() {
-      const filteredLocalStorageTimers = Object.keys({ ...localStorageTimers })
-        .filter(
-          key =>
-            localStorageTimers[key].date == moment().format('YYYY-MM-DD') ||
-            localStorageTimers[key].unsavedChanges == true
-        )
-        .reduce((obj, key) => {
-          obj[key] = localStorageTimers[key];
-          return obj;
-        }, {});
-
-      let tempTimerObj = { ...timerObj };
-      tempTimerObj = { ...tempTimerObj, ...filteredLocalStorageTimers };
-
-      console.log(tempTimerObj);
-
-      try {
-        const clients = await retrieveClients(apiURL, freshbookToken);
-
-        const projects = await retrieveProjects(apiURL, freshbookToken);
-
-        console.log(clients);
-
-        projects.forEach((project: Project) => {
-          if (project) {
-            console.log(project.client_id);
-            // Note for Charlie - I am eventually going to use this to build the picklist for the Projects FYI
-            clients[project.client_id].projects.push(project);
-          }
-        });
-
-        setClientMap(clients);
-
-        console.log(clients);
-
-        setProjecList(projects);
-        tempTimerObj = await retrieveTimeEntries(
-          apiURL,
-          freshbookToken,
-          tempTimerObj
-        );
-      } catch (e) {
-        message.error(e.toString());
-        console.log(e);
-      }
-      setTimerObj(tempTimerObj);
-      setLocalStorageTimers(tempTimerObj);
+    function retrieveFreshbookData() {
+      refreshAppdata();
     }
     retrieveFreshbookData();
-  }, []);
+  }, []); */
   // console.log(projectTasksMap);
+
+  useEffect(() => {
+    // setInitialLoad(true);
+
+    async function retrieveFreshbookData() {
+      refreshAppdata();
+    }
+    if (apiURL && freshbookToken) {
+      retrieveFreshbookData();
+    } else {
+      setShowSpinner(false);
+    }
+  }, [apiURL, freshbookToken]);
 
   useInterval(() => {
     incrementTimer(timerObj, activeTimer, setTimerObj);
@@ -128,18 +159,16 @@ function App() {
   };
 
   const handleFieldUpdate = (changes: Partial<TimerEntry>, key: string) => {
-    console.log('changes', changes);
     const tempState = { ...timerObj };
     tempState[key] = { ...tempState[key], ...changes };
     tempState[key].unsavedChanges = true;
-
-    console.log('tempstate', tempState);
 
     setTimerObj(tempState);
     setLocalStorageTimers(tempState);
   };
 
   const saveTimeEntry = (key: string) => {
+    setShowSpinner(true);
     const tempTimerObj = { ...timerObj };
     let tempTimeEntry: TimerEntry = tempTimerObj[key];
     tempTimeEntry.unsavedChanges = false;
@@ -167,15 +196,14 @@ function App() {
             tempTimeEntry
           );
         }
-        console.log(tempTimeEntry);
         tempTimerObj[key] = tempTimeEntry;
       } catch (e) {
         message.error(e.toString());
         console.log(e);
       }
-      console.log(tempTimerObj);
       setTimerObj(tempTimerObj);
       setLocalStorageTimers(tempTimerObj);
+      setShowSpinner(false);
     }
     saveTimerEntryToFB();
   };
@@ -228,7 +256,6 @@ function App() {
           setLocalStorageTimers(tempTimerObj);
         }}
         onFieldUpdate={(changes: Partial<TimerEntry>) => {
-          console.log(changes);
           handleFieldUpdate(changes, key);
         }}
         onTimerSave={() => {
@@ -250,53 +277,78 @@ function App() {
     );
 
   return (
-    <Layout>
-      <SettingsDrawer
-        showSettings={showSettings}
-        apiURL={apiURL}
-        freshbookToken={freshbookToken}
-        onSettingsClose={onSettingsClose}
-        onSettingsChange={onSettingsChange}
-      />
-      <Layout.Content>
-        <Card
-          title={<span>Freshbook Time Tracker </span>}
-          extra={
-            <Button
-              type="primary"
-              onClick={() => {
-                setShowSettings(true);
-                return showSettings;
-              }}
-              icon={<SettingOutlined />}
-            />
-          }
-        >
-          <h1 style={{ textAlign: 'center' }}>{todaysDate}</h1>
-
+    <Spin spinning={showSpinner}>
+      <Layout>
+        <SettingsDrawer
+          showSettings={showSettings}
+          apiURL={apiURL}
+          freshbookToken={freshbookToken}
+          onSettingsClose={onSettingsClose}
+          onSettingsChange={onSettingsChange}
+        />
+        <Layout.Content>
           <Card
-            title={
-              <span>
-                <ClockCircleOutlined />
-                &nbsp; Timers
-              </span>
-            }
-            extra={
-              <Button
-                type="primary"
-                onClick={handleNewTimer}
-                icon={<PlusOutlined />}
-                style={{ float: 'right' }}
-              />
-            }
-            style={{ minWidth: 600, maxWidth: 1200, margin: 'auto' }}
+            title={<span>Freshbook Time Tracker </span>}
+            extra={[
+              <Tooltip
+                placement="topLeft"
+                title="Refresh Freshbook data!"
+                key="refreshDataToolTip"
+              >
+                <Button
+                  ghost
+                  key="refreshData"
+                  type="primary"
+                  onClick={async () => {
+                    setShowSpinner(true);
+                    refreshAppdata();
+                  }}
+                  icon={<ReloadOutlined />}
+                />
+              </Tooltip>,
+              <Tooltip
+                placement="topLeft"
+                title="Settings to enter Freshbook credentials!"
+                key="settingToolTip"
+              >
+                <Button
+                  key="settings"
+                  type="primary"
+                  onClick={() => {
+                    setShowSettings(true);
+                    return showSettings;
+                  }}
+                  icon={<SettingOutlined />}
+                />
+              </Tooltip>
+            ]}
           >
-            {authenticationStatus}
-            {timerDisplay}
+            <h1 style={{ textAlign: 'center' }}>{todaysDate}</h1>
+
+            <Card
+              title={
+                <span>
+                  <ClockCircleOutlined />
+                  &nbsp; Timers
+                </span>
+              }
+              extra={
+                <Button
+                  type="primary"
+                  onClick={handleNewTimer}
+                  icon={<PlusOutlined />}
+                  style={{ float: 'right' }}
+                />
+              }
+              style={{ minWidth: 600, maxWidth: 1200, margin: 'auto' }}
+            >
+              {authenticationStatus}
+              {timerDisplay}
+            </Card>
           </Card>
-        </Card>
-      </Layout.Content>
-    </Layout>
+        </Layout.Content>
+      </Layout>
+    </Spin>
   );
 }
 
