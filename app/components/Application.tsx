@@ -25,7 +25,8 @@ import {
   updateTimeEntry,
   createTimeEntry,
   retrieveClients,
-  Client
+  Client,
+  ClientMap
 } from '../lib/freshbookClient';
 // import { testIntegration } from "./lib/freshbookClient";
 
@@ -55,7 +56,7 @@ function App() {
 
   const [projectList, setProjecList] = useState<Project[]>([]);
 
-  const [clientList, setClientList] = useState<Client[]>([]);
+  const [clientMap, setClientMap] = useState<ClientMap>({});
 
   useEffect(() => {
     // setInitialLoad(true);
@@ -87,9 +88,11 @@ function App() {
           if (project) {
             console.log(project.client_id);
             // Note for Charlie - I am eventually going to use this to build the picklist for the Projects FYI
-            // clients[project.client_id].projects.push(project);
+            clients[project.client_id].projects.push(project);
           }
         });
+
+        setClientMap(clients);
 
         console.log(clients);
 
@@ -124,10 +127,14 @@ function App() {
     setActiveTimer(newTempId);
   };
 
-  const handleFieldUpdate = (obj: FieldEntry, key: string) => {
+  const handleFieldUpdate = (changes: Partial<TimerEntry>, key: string) => {
+    console.log('changes', changes);
     const tempState = { ...timerObj };
-    tempState[key] = { ...tempState[key], [obj.field]: obj.fieldValue };
+    tempState[key] = { ...tempState[key], ...changes };
     tempState[key].unsavedChanges = true;
+
+    console.log('tempstate', tempState);
+
     setTimerObj(tempState);
     setLocalStorageTimers(tempState);
   };
@@ -204,6 +211,7 @@ function App() {
         active={activeTimer === key}
         key={key}
         projectList={projectList}
+        clients={clientMap}
         onTimerDelete={() => {
           handleTimerDelete(key);
         }}
@@ -215,10 +223,13 @@ function App() {
         }}
         onTimerContinue={() => {
           setActiveTimer(key);
-          setLocalStorageTimers(timerObj);
+          const tempTimerObj = { ...timerObj };
+          tempTimerObj[key].unsavedChanges = true;
+          setLocalStorageTimers(tempTimerObj);
         }}
-        onFieldUpdate={(obj: FieldEntry) => {
-          handleFieldUpdate(obj, key);
+        onFieldUpdate={(changes: Partial<TimerEntry>) => {
+          console.log(changes);
+          handleFieldUpdate(changes, key);
         }}
         onTimerSave={() => {
           saveTimeEntry(key);

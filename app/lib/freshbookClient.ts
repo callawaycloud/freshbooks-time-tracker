@@ -153,7 +153,7 @@ export function retrieveClients(
   return new Promise((resolve, reject) => {
     const freshbooks = new FreshBooks(apiUrl, apiToken);
 
-    freshbooks.client.list({ per_page: 50 }, function(
+    freshbooks.client.list({ per_page: 100, folder: 'active' }, function(
       err: any,
       clients: any,
       metaData: any
@@ -216,6 +216,62 @@ export function retrieveTasks(
   });
 }
 
+function taskPromise(
+  apiUrl: string | undefined,
+  apiToken: string | undefined,
+  projectId: string
+) {
+  return new Promise((resolve, reject) => {
+    const freshbooks = new FreshBooks(apiUrl, apiToken);
+
+    const taskListMap: KeyMap<Task[]> = {};
+
+    freshbooks.task.list({ project_id: projectId }, function(
+      err: any,
+      tasks: any,
+      metaData: any
+    ) {
+      // reject(new Error('error here'));
+      if (err) {
+        reject(err);
+      }
+      console.log('tasks', tasks);
+      const taskList: Task[] = [];
+      tasks.forEach((task: { task_id: any; name: any }) => {
+        taskList.push({ task_id: task.task_id, name: task.name });
+      });
+      taskListMap[projectId] = taskList;
+      resolve(taskListMap);
+    });
+  });
+}
+
+export async function retrieveProjectTasks(
+  apiUrl: string | undefined,
+  apiToken: string | undefined,
+  projects: Project[]
+): any {
+  const promises: any = [];
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const project of projects) {
+    console.log(project);
+    // eslint-disable-next-line no-await-in-loop
+    promises.push(taskPromise(apiUrl, apiToken, project.project_id));
+  }
+
+  return Promise.all(promises)
+    .then(response => {
+      console.log(response);
+      return response.reduce((projectTaskMap, item) => {
+        const keyOfObject = Object.keys(item)[0];
+        projectTaskMap[keyOfObject] = item[keyOfObject];
+        return projectTaskMap;
+      });
+    })
+    .catch(error => console.log(error));
+}
+
 export function retrieveProjects(
   apiUrl: string | undefined,
   apiToken: string | undefined
@@ -237,18 +293,26 @@ export function retrieveProjects(
 
       console.log(projects);
 
+      const projectTask = await retrieveProjectTasks(
+        apiUrl,
+        apiToken,
+        projects
+      );
+      console.log('here', projectTask);
+
       // eslint-disable-next-line no-restricted-syntax
       for (const project of projects) {
         // eslint-disable-next-line no-await-in-loop
-        const taskList: Task[] = await retrieveTasks(
+        /* const taskList: Task[] = await retrieveTasks(
           apiUrl,
           apiToken,
           project.project_id
-        );
+        ); */
+        const taskForProject = projectTask[project.project_id];
         projectList.push({
           project_id: project.project_id,
           name: project.name,
-          tasks: taskList,
+          tasks: taskForProject,
           client_id: project.client_id
         });
       }

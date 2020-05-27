@@ -5,15 +5,15 @@ import {
   PlayCircleOutlined,
   SaveOutlined
 } from '@ant-design/icons';
-import { Button, Card, Col, Input, Row, Select } from 'antd';
+import { Button, Card, Col, Input, Row, Select, InputNumber } from 'antd';
 import { ButtonProps } from 'antd/lib/button';
 import * as React from 'react';
 import { FieldEntry, TimerEntry } from '../lib/timerState';
 import { DisplayElapsedTime } from './DisplayElapsedTime';
-import { Project } from '../lib/freshbookClient';
+import { Project, ClientMap } from '../lib/freshbookClient';
 // import { Project } from '../lib/freshbookClient';
 
-const { Option } = Select;
+const { Option, OptGroup } = Select;
 const { TextArea } = Input;
 
 export function TimeEntryCard(props: {
@@ -22,29 +22,64 @@ export function TimeEntryCard(props: {
   onTimerDelete: () => void;
   onTimerPause: () => void;
   onTimerContinue: () => void;
-  onFieldUpdate: (obj: FieldEntry) => void;
+  onFieldUpdate: (changes: Partial<TimerEntry>) => void;
   onTimerSave: () => void;
   projectList: Project[];
+  clients: ClientMap;
   // taskList: JSX.Element[];
 }) {
-  const dateFormatted = props.timerData.date
-    ? props.timerData.date.toString().slice(0, -14)
-    : '';
+  const dateFormatted = props.timerData.date;
+
+  console.log(dateFormatted);
 
   const hrefLink = `https://callawaycloudconsulting.freshbooks.com/timesheet#date/${dateFormatted}/edit/${props.timerData.freshbooksId}`;
+
+  console.log(props.timerData);
+  function myFunction(event) {
+    console.log(event);
+    const { shell } = require('electron');
+    event.preventDefault();
+    shell.openExternal(hrefLink);
+  }
   const linkToFreshbook = props.timerData.freshbooksId ? (
-    <Button type="link" href={hrefLink} target="_blank">
+    <Button type="link" target="_blank" onClick={myFunction} href={hrefLink}>
       View in Freshbooks
     </Button>
   ) : (
     ''
   );
 
-  const projectListPicklist: JSX.Element[] = props.projectList.map(key => {
+  /* const projectListPicklist: JSX.Element[] = props.projectList.map(key => {
     return (
       <Select.Option value={key.project_id} key={key.project_id}>
         {key.name}
       </Select.Option>
+    );
+  }); */
+
+  const projectListPicklist: JSX.Element[] | null = Object.values(
+    props.clients
+  ).map(key => {
+    const clientProjects = key.projects;
+    if (clientProjects.length === 0) {
+      return null;
+    }
+
+    const clientProjectPicklist: JSX.Element[] = clientProjects.map(proj => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      return (
+        <Option value={proj.project_id} key={proj.project_id}>
+          {proj.name}
+        </Option>
+      );
+    });
+
+    // clientProjectPicklist
+
+    return (
+      <OptGroup label={key.name} key={key.name}>
+        {clientProjectPicklist}
+      </OptGroup>
     );
   });
 
@@ -75,6 +110,7 @@ export function TimeEntryCard(props: {
       <span style={{ float: 'right' }}>
         <TimeEntryActions
           active={props.active}
+          timerData={props.timerData}
           onTimerContinue={props.onTimerContinue}
           onTimerPause={props.onTimerPause}
           onTimerDelete={props.onTimerDelete}
@@ -86,25 +122,23 @@ export function TimeEntryCard(props: {
         <Row gutter={[16, 16]} style={{ textAlign: 'left' }}>
           <Col span={12}>
             <Select
+              placeholder="Select a Project"
               key="selectedProject"
               defaultValue={props.timerData.project}
               style={{ width: '80%', marginTop: 10 }}
               onChange={value =>
-                props.onFieldUpdate({
-                  fieldValue: value,
-                  field: 'project'
-                })
+                props.onFieldUpdate({ project: value, task: undefined })
               }
             >
               {projectListPicklist}
             </Select>
             <Select
-              defaultValue={props.timerData.task}
+              placeholder="Select a Task"
+              value={props.timerData.task}
               style={{ width: '80%', marginTop: 10 }}
               onChange={value =>
                 props.onFieldUpdate({
-                  fieldValue: value,
-                  field: 'task'
+                  task: value
                 })
               }
             >
@@ -119,8 +153,7 @@ export function TimeEntryCard(props: {
               defaultValue={props.timerData.notes}
               onChange={event =>
                 props.onFieldUpdate({
-                  fieldValue: event.target.value,
-                  field: 'notes'
+                  notes: event.target.value
                 })
               }
             />
@@ -128,7 +161,28 @@ export function TimeEntryCard(props: {
         </Row>
         <div>
           Time to log in Freshbook:
-          {props.timerData.roundedCount / 3600}
+          <InputNumber
+            min={0}
+            step={0.25}
+            value={props.timerData.roundedCount / 3600}
+            onChange={value => {
+              console.log(value);
+              console.log(value);
+              if (value === '.') {
+                value = 0.0;
+              }
+              props.onFieldUpdate({
+                count: value ? value * 3600 : 0,
+                roundedCount: value ? value * 3600 : 0
+              });
+            }}
+          />
+        </div>
+        <div>
+          Current time logged in Freshbook:
+          {props.timerData.countLoggedinFreshbook
+            ? props.timerData.countLoggedinFreshbook / 3600
+            : 0}
         </div>
         {linkToFreshbook}
       </div>
@@ -144,6 +198,7 @@ function TimeEntryActions(props: {
   onTimerDelete: () => void;
   onTimerSave: () => void;
   notSavedToFreshbooks: boolean;
+  timerData: TimerEntry;
 }) {
   const pauseOrPlayProps: ButtonProps = props.active
     ? {
@@ -155,6 +210,22 @@ function TimeEntryActions(props: {
         icon: <PlayCircleOutlined />,
         onClick: props.onTimerContinue
       };
+
+  const saveButton = props.timerData.unsavedChanges ? (
+    <Button
+      type="primary"
+      icon={
+        props.notSavedToFreshbooks ? <CloudUploadOutlined /> : <SaveOutlined />
+      }
+      size="large"
+      onClick={props.onTimerSave}
+      key="saveBtn"
+      danger={props.notSavedToFreshbooks}
+    />
+  ) : (
+    ''
+  );
+
   return (
     <>
       <Button
@@ -163,20 +234,7 @@ function TimeEntryActions(props: {
         {...pauseOrPlayProps}
         key="pausePlayBtn"
       />
-      <Button
-        type="primary"
-        icon={
-          props.notSavedToFreshbooks ? (
-            <CloudUploadOutlined />
-          ) : (
-            <SaveOutlined />
-          )
-        }
-        size="large"
-        onClick={props.onTimerSave}
-        key="saveBtn"
-        danger={props.notSavedToFreshbooks}
-      />
+      {saveButton}
       <Button
         type="primary"
         icon={<DeleteOutlined />}
