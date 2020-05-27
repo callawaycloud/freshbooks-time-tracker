@@ -250,7 +250,7 @@
     "electron-debug": "^3.0.1",
     "electron-log": "^4.0.6",
     "electron-updater": "^4.2.0",
-    "freshbooks-api": "valrustan/node-freshbooks-api",
+    "freshbooks-api": "valrustan/node-freshbooks-api#43d95c9d21ab2c204489e87b9b30a9d33114dff8",
     "history": "^4.10.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",

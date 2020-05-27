@@ -7116,6 +7116,13 @@ freshbooks-api@valrustan/node-freshbooks-api:
     request "^2.60.0"
     xml2js "^0.4.10"
 
+freshbooks-api@valrustan/node-freshbooks-api#43d95c9d21ab2c204489e87b9b30a9d33114dff8:
+  version "0.1.4"
+  resolved "https://codeload.github.com/valrustan/node-freshbooks-api/tar.gz/43d95c9d21ab2c204489e87b9b30a9d33114dff8"
+  dependencies:
+    request "^2.60.0"
+    xml2js "^0.4.10"
+
 from2@^2.1.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/from2/-/from2-2.3.0.tgz#8bfb5502bde4a4d36cfdeea007fcca21d7e382af"
