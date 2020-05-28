@@ -39,8 +39,18 @@ import {
   ClientMap
 } from '../lib/freshbookClient';
 
-export const TEMP_ID_PREFIX = 'tmp-';
+export const TEMP_ID_PREFIX = 'zzz-';
 const todaysDate = moment().format('MMMM Do, YYYY');
+
+function isValidUrl(urlString: string) {
+  try {
+    const newURL = new URL(urlString);
+  } catch (_) {
+    return false;
+  }
+
+  return true;
+}
 
 function App() {
   const [showSpinner, setShowSpinner] = useState<boolean>(true);
@@ -66,6 +76,10 @@ function App() {
   const [projectList, setProjecList] = useState<Project[]>([]);
 
   const [clientMap, setClientMap] = useState<ClientMap>({});
+
+  const freshbookHostName: string = isValidUrl(apiURL)
+    ? new URL(apiURL).hostname
+    : '';
 
   const refreshAppdata = async () => {
     const filteredLocalStorageTimers = Object.keys({ ...localStorageTimers })
@@ -113,6 +127,10 @@ function App() {
   };
 
   useEffect(() => {
+    if (showSettings) {
+      return;
+    }
+    setShowSpinner(true);
     async function retrieveFreshbookData() {
       refreshAppdata();
     }
@@ -121,7 +139,7 @@ function App() {
     } else {
       setShowSpinner(false);
     }
-  }, [apiURL, freshbookToken]);
+  }, [showSettings]);
 
   useInterval(() => {
     incrementTimer(timerObj, activeTimer, setTimerObj);
@@ -131,8 +149,9 @@ function App() {
   }, 1000);
 
   const handleNewTimer = () => {
-    const newTempId =
-      TEMP_ID_PREFIX + new Date().getUTCMilliseconds().toString();
+    const newTempId = TEMP_ID_PREFIX + new Date().getTime().toString();
+
+    console.log(newTempId);
     setTimerObj(newTimer(timerObj, newTempId));
     setActiveTimer(newTempId);
   };
@@ -207,44 +226,60 @@ function App() {
     }
   };
 
-  const timerDisplay: JSX.Element[] = Object.keys(timerObj).map(key => {
-    return (
-      <TimeEntryCard
-        timerData={timerObj[key]}
-        active={activeTimer === key}
-        key={key}
-        projectList={projectList}
-        clients={clientMap}
-        onTimerDelete={() => {
-          handleTimerDelete(key);
-        }}
-        onTimerPause={() => {
-          if (activeTimer === key) {
-            setActiveTimer(undefined);
-            setLocalStorageTimers(timerObj);
-          }
-        }}
-        onTimerContinue={() => {
-          setActiveTimer(key);
-          const tempTimerObj = { ...timerObj };
-          tempTimerObj[key].unsavedChanges = true;
-          setLocalStorageTimers(tempTimerObj);
-        }}
-        onFieldUpdate={(changes: Partial<TimerEntry>) => {
-          handleFieldUpdate(changes, key);
-        }}
-        onTimerSave={() => {
-          saveTimeEntry(key);
-        }}
-      />
-    );
-  });
+  const timerDisplay: JSX.Element[] = Object.keys(timerObj)
+    .sort((a, b) => {
+      return b.localeCompare(a);
+    })
+    .map(key => {
+      return (
+        <TimeEntryCard
+          timerData={timerObj[key]}
+          active={activeTimer === key}
+          key={key}
+          projectList={projectList}
+          clients={clientMap}
+          freshbookHostName={freshbookHostName}
+          onTimerDelete={() => {
+            handleTimerDelete(key);
+          }}
+          onTimerPause={() => {
+            if (activeTimer === key) {
+              setActiveTimer(undefined);
+              setLocalStorageTimers(timerObj);
+            }
+          }}
+          onTimerContinue={() => {
+            setActiveTimer(key);
+            const tempTimerObj = { ...timerObj };
+            tempTimerObj[key].unsavedChanges = true;
+            setLocalStorageTimers(tempTimerObj);
+          }}
+          onFieldUpdate={(changes: Partial<TimerEntry>) => {
+            handleFieldUpdate(changes, key);
+          }}
+          onTimerSave={() => {
+            saveTimeEntry(key);
+          }}
+        />
+      );
+    });
 
   const authenticationStatus =
-    !apiURL || !freshbookToken ? (
+    !apiURL || !freshbookToken || !freshbookHostName ? (
       <Alert
         message="Please Set Freshbook Authentication Settings"
-        description="Freshbook authentication settings are not currently set!"
+        description={
+          <div>
+            Freshbook authentication settings are not currently set!&nbsp;
+            <Button
+              key="settings"
+              type="primary"
+              onClick={() => setShowSettings(true)}
+            >
+              Open Settings Drawer
+            </Button>
+          </div>
+        }
         type="warning"
       />
     ) : (
@@ -289,10 +324,7 @@ function App() {
                 <Button
                   key="settings"
                   type="primary"
-                  onClick={() => {
-                    setShowSettings(true);
-                    return showSettings;
-                  }}
+                  onClick={() => setShowSettings(true)}
                   icon={<SettingOutlined />}
                 />
               </Tooltip>

@@ -6,7 +6,16 @@ import {
   SaveOutlined,
   CloseOutlined
 } from '@ant-design/icons';
-import { Button, Card, Col, Input, Row, Select, InputNumber } from 'antd';
+import {
+  Button,
+  Card,
+  Col,
+  Input,
+  Row,
+  Select,
+  InputNumber,
+  Popconfirm
+} from 'antd';
 import { ButtonProps } from 'antd/lib/button';
 import * as React from 'react';
 import { FieldEntry, TimerEntry } from '../lib/timerState';
@@ -30,10 +39,11 @@ export function TimeEntryCard(props: {
   onTimerSave: () => void;
   projectList: Project[];
   clients: ClientMap;
+  freshbookHostName: string;
 }) {
   const dateFormatted = props.timerData.date;
 
-  const hrefLink = `https://callawaycloudconsulting.freshbooks.com/timesheet#date/${dateFormatted}/edit/${props.timerData.freshbooksId}`;
+  const hrefLink = `https://${props.freshbookHostName}/timesheet#date/${dateFormatted}/edit/${props.timerData.freshbooksId}`;
 
   const linkToFreshbook = props.timerData.freshbooksId ? (
     <Button
@@ -48,9 +58,7 @@ export function TimeEntryCard(props: {
     ''
   );
 
-  const projectListPicklist: JSX.Element[] | null = Object.values(
-    props.clients
-  ).map(key => {
+  const projectListPicklist = Object.values(props.clients).map(key => {
     const clientProjects = key.projects;
     if (clientProjects.length === 0) {
       return null;
@@ -155,12 +163,14 @@ export function TimeEntryCard(props: {
             min={0}
             step={0.25}
             value={props.timerData.roundedCount / 3600}
-            onChange={value =>
+            onChange={value => {
+              // eslint-disable-next-line no-restricted-globals
+              const numValue = !isNaN(Number(value)) ? Number(value) * 3600 : 0;
               props.onFieldUpdate({
-                count: value ? value * 3600 : 0,
-                roundedCount: value ? value * 3600 : 0
-              })
-            }
+                count: numValue,
+                roundedCount: numValue
+              });
+            }}
           />
         </div>
         <div>
@@ -210,6 +220,36 @@ function TimeEntryActions(props: {
     ''
   );
 
+  const deleteButton = props.timerData.unsavedChanges ? (
+    <Popconfirm
+      placement="bottomRight"
+      title="This timer has changes that have not been saved in Freshbook. Are you sure you want to delete it?"
+      key="deletePopConfirm"
+      onConfirm={props.onTimerDelete}
+      okText="Yes"
+      cancelText="No"
+    >
+      <Button
+        type="primary"
+        icon={
+          props.notSavedToFreshbooks ? <DeleteOutlined /> : <CloseOutlined />
+        }
+        size="large"
+        danger
+        key="deleteBtn"
+      />
+    </Popconfirm>
+  ) : (
+    <Button
+      type="primary"
+      icon={<CloseOutlined />}
+      size="large"
+      onClick={props.onTimerDelete}
+      danger
+      key="deleteBtn"
+    />
+  );
+
   return (
     <>
       <Button
@@ -219,16 +259,7 @@ function TimeEntryActions(props: {
         key="pausePlayBtn"
       />
       {saveButton}
-      <Button
-        type="primary"
-        icon={
-          props.notSavedToFreshbooks ? <DeleteOutlined /> : <CloseOutlined />
-        }
-        size="large"
-        onClick={props.onTimerDelete}
-        danger
-        key="deleteBtn"
-      />
+      {deleteButton}
     </>
   );
 }

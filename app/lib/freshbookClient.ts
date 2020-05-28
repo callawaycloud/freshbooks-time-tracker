@@ -167,7 +167,7 @@ function taskPromise(
   apiToken: string | undefined,
   projectId: string
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise<KeyMap<Task[]>>((resolve, reject) => {
     const freshbooks = new FreshBooks(apiUrl, apiToken);
 
     const taskListMap: KeyMap<Task[]> = {};
@@ -181,7 +181,7 @@ function taskPromise(
         reject(err);
       }
       const taskList: Task[] = [];
-      tasks.forEach((task: { task_id: any; name: any }) => {
+      tasks.forEach((task: Task) => {
         taskList.push({ task_id: task.task_id, name: task.name });
       });
       taskListMap[projectId] = taskList;
@@ -194,8 +194,8 @@ export async function retrieveProjectTasks(
   apiUrl: string | undefined,
   apiToken: string | undefined,
   projects: Project[]
-): any {
-  const promises: any = [];
+) {
+  const promises: Promise<KeyMap<Task[]>>[] = [];
 
   // eslint-disable-next-line no-restricted-syntax
   for (const project of projects) {
@@ -203,16 +203,13 @@ export async function retrieveProjectTasks(
     promises.push(taskPromise(apiUrl, apiToken, project.project_id));
   }
 
-  return Promise.all(promises)
-    .then(response => {
-      return response.reduce((projectTaskMap, item) => {
-        const keyOfObject = Object.keys(item)[0];
-        // eslint-disable-next-line no-param-reassign
-        projectTaskMap[keyOfObject] = item[keyOfObject];
-        return projectTaskMap;
-      });
-    })
-    .catch(error => console.log(error));
+  const response = await Promise.all(promises);
+  return response.reduce((projectTaskMap, item) => {
+    const keyOfObject = Object.keys(item)[0];
+    // eslint-disable-next-line no-param-reassign
+    projectTaskMap[keyOfObject] = item[keyOfObject];
+    return projectTaskMap;
+  });
 }
 
 export function retrieveProjects(
