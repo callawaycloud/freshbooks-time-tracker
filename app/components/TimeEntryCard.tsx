@@ -119,6 +119,8 @@ export function TimeEntryCard(props: {
         <Row gutter={[16, 16]} style={{ textAlign: 'left' }}>
           <Col span={12}>
             <Select
+              showSearch
+              optionFilterProp="children"
               placeholder="Select a Project"
               key="selectedProject"
               value={props.timerData.project}
@@ -130,6 +132,7 @@ export function TimeEntryCard(props: {
               {projectListPicklist}
             </Select>
             <Select
+              showSearch
               placeholder="Select a Task"
               value={props.timerData.task}
               style={{ width: '80%', marginTop: 10 }}
