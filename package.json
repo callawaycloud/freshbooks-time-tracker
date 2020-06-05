@@ -1,7 +1,7 @@
 {
   "name": "freshbooks-time-tracker",
   "productName": "FreshbookTimeTracker",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Used to track multiple timers in freshbooks",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
