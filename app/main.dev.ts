@@ -14,6 +14,9 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 
+// powerSaveBlocker.start('prevent-app-suspension');
+// app.commandLine.appendSwitch('--disable-background-timer-throttling');
+
 export default class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
@@ -67,6 +70,7 @@ const createWindow = async () => {
             preload: path.join(__dirname, 'dist/renderer.prod.js')
           }
   });
+  mainWindow.webContents.setBackgroundThrottling(false);
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 

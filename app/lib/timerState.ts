@@ -1,16 +1,23 @@
-interface KeyMap<T> {
+// eslint-disable-next-line import/no-cycle
+import moment from 'antd/node_modules/moment';
+// eslint-disable-next-line import/no-cycle
+import { Task } from './freshbookClient';
+
+export interface KeyMap<T> {
   [key: string]: T;
 }
 
 export interface TimerEntry {
+  localId: string;
   count: number;
   roundedCount: number;
+  countLoggedinFreshbook?: number;
   project?: string;
   task?: string;
   notes?: string;
   freshbooksId?: string;
   unsavedChanges?: boolean;
-  date?: Date;
+  date?: string;
 }
 
 export interface FieldEntry {
@@ -20,13 +27,16 @@ export interface FieldEntry {
 
 export type TimerState = KeyMap<TimerEntry>;
 
+export type ProjectTaskState = KeyMap<Task[]>;
+
 export function newTimer(state: TimerState, newTempId: string) {
   const tempState = { ...state };
   tempState[newTempId] = {
+    localId: newTempId,
     count: 0,
     roundedCount: 0,
     unsavedChanges: true,
-    date: new Date()
+    date: moment().format('YYYY-MM-DD')
   };
   return tempState;
 }
@@ -59,8 +69,3 @@ export function removeTimer(state: TimerState, timerId: string) {
 
   return tempState;
 }
-
-/* export function updateFieldValue(state: TimerState, timerId: string) {
-  let tempState = { ...state };
-  return tempState;
-} */

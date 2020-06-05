@@ -25,7 +25,6 @@ export function SettingsDrawer(props: {
         key="apiUrlInputKey"
         onChange={e => {
           props.onSettingsChange('apiURL', e.target.value);
-          // setApiUrl(e.target.value);
         }}
         addonBefore="API URL"
       />
@@ -36,7 +35,6 @@ export function SettingsDrawer(props: {
         value={props.freshbookToken}
         onChange={e => {
           props.onSettingsChange('freshbookToken', e.target.value);
-          // setFreshbookToken(e.target.value);
         }}
         addonBefore="Authentication Token"
       />
