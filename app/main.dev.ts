@@ -9,10 +9,13 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, powerSaveBlocker } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
+
+// powerSaveBlocker.start('prevent-app-suspension');
+// app.commandLine.appendSwitch('--disable-background-timer-throttling');
 
 export default class AppUpdater {
   constructor() {
@@ -67,6 +70,7 @@ const createWindow = async () => {
             preload: path.join(__dirname, 'dist/renderer.prod.js')
           }
   });
+  mainWindow.webContents.setBackgroundThrottling(false);
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
