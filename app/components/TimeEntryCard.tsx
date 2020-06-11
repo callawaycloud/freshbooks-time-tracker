@@ -98,12 +98,13 @@ export function TimeEntryCard(props: {
   }
 
   return (
-    <Card style={{ textAlign: 'center', margin: '15px' }}>
+    <Card style={{ textAlign: 'center', margin: '10px' }} size="small">
       <div style={{ clear: 'both' }} />
       <DisplayElapsedTime
         elapsedTime={props.timerData.count}
         active={props.active}
       />
+      {props.timerData.date}
       <span style={{ float: 'right' }}>
         <TimeEntryActions
           active={props.active}
@@ -175,14 +176,13 @@ export function TimeEntryCard(props: {
               });
             }}
           />
-        </div>
-        <div>
-          Current time logged in Freshbook:
+          &nbsp;|&nbsp; Current time logged in Freshbook:
           {props.timerData.countLoggedinFreshbook
             ? props.timerData.countLoggedinFreshbook / 3600
             : 0}
+          &nbsp;|&nbsp;
+          {linkToFreshbook}
         </div>
-        {linkToFreshbook}
       </div>
     </Card>
   );
@@ -214,7 +214,7 @@ function TimeEntryActions(props: {
       icon={
         props.notSavedToFreshbooks ? <CloudUploadOutlined /> : <SaveOutlined />
       }
-      size="large"
+      size="small"
       onClick={props.onTimerSave}
       key="saveBtn"
       danger={props.notSavedToFreshbooks}
@@ -237,7 +237,7 @@ function TimeEntryActions(props: {
         icon={
           props.notSavedToFreshbooks ? <DeleteOutlined /> : <CloseOutlined />
         }
-        size="large"
+        size="small"
         danger
         key="deleteBtn"
       />
@@ -246,7 +246,7 @@ function TimeEntryActions(props: {
     <Button
       type="primary"
       icon={<CloseOutlined />}
-      size="large"
+      size="small"
       onClick={props.onTimerDelete}
       danger
       key="deleteBtn"
@@ -257,7 +257,7 @@ function TimeEntryActions(props: {
     <>
       <Button
         type="primary"
-        size="large"
+        size="small"
         {...pauseOrPlayProps}
         key="pausePlayBtn"
       />

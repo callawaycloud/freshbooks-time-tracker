@@ -11,7 +11,7 @@ export function DisplayElapsedTime(props: DisplayElapsedTimeProps) {
   const color = props.active ? 'success' : 'warning';
   return (
     <Tag color={color} style={{ float: 'left' }}>
-      <span style={{ fontSize: '30px', lineHeight: '40px' }}>
+      <span style={{ fontSize: '20px', lineHeight: '28px' }}>
         {getTimerDisplay(props.elapsedTime)}
       </span>
     </Tag>
