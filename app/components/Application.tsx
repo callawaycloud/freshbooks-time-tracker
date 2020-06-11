@@ -2,7 +2,8 @@ import {
   ClockCircleOutlined,
   PlusOutlined,
   SettingOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  CaretRightOutlined
 } from '@ant-design/icons';
 import {
   Alert,
@@ -87,8 +88,6 @@ function App() {
     : '';
 
   const refreshAppdata = async () => {
-    console.log(selectedDate.format('YYYY-MM-DD'));
-    console.log(localStorageTimers);
     const filteredLocalStorageTimers = Object.keys({ ...localStorageTimers })
       .filter(
         key =>
@@ -98,10 +97,6 @@ function App() {
       .reduce((obj, key) => {
         const objClone: TimerState = { ...obj };
         const objTimerClone: TimerEntry = { ...localStorageTimers[key] };
-
-        if (!objTimerClone.freshbooksId) {
-          objTimerClone.date = selectedDate.format('YYYY-MM-DD');
-        }
 
         objClone[key] = objTimerClone;
         return objClone;
@@ -320,6 +315,30 @@ function App() {
     }
   });
 
+  const changeDateToTodayBtn = moment(
+    selectedDate.format('YYYY-MM-DD')
+  ).isBefore(moment().format('YYYY-MM-DD'), 'day') ? (
+    <Tooltip
+      placement="topLeft"
+      title="Update the date to today's date! Any unsaved timer will still be saved to the date the timer was initiated!"
+      key="dateToTodayToolTip"
+    >
+      <Button
+        size="small"
+        key="dateToToday"
+        type="primary"
+        onClick={() => {
+          setTimerObj({});
+          setSelectedDate(moment());
+        }}
+        icon={<CaretRightOutlined />}
+        shape="circle"
+      />
+    </Tooltip>
+  ) : (
+    ''
+  );
+
   return (
     <Spin spinning={showSpinner}>
       <Layout>
@@ -368,15 +387,8 @@ function App() {
             <Row>
               <Col span={8} offset={8}>
                 <h1 style={{ textAlign: 'center' }}>
-                  <DatePicker
-                    value={selectedDate}
-                    format="MMMM Do, YYYY"
-                    onChange={(date, dateString) => {
-                      const dateSelected: any = date === null ? moment() : date;
-                      setTimerObj({});
-                      setSelectedDate(dateSelected);
-                    }}
-                  />
+                  {selectedDate.format('MMMM Do, YYYY')}
+                  {changeDateToTodayBtn}
                 </h1>
               </Col>
               <Col span={8}>
