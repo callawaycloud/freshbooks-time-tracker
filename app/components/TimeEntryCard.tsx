@@ -170,10 +170,12 @@ export function TimeEntryCard(props: {
             onChange={value => {
               // eslint-disable-next-line no-restricted-globals
               const numValue = !isNaN(Number(value)) ? Number(value) * 3600 : 0;
-              props.onFieldUpdate({
-                count: numValue,
-                roundedCount: numValue
-              });
+              if (props.timerData.roundedCount !== numValue) {
+                props.onFieldUpdate({
+                  count: numValue,
+                  roundedCount: numValue
+                });
+              }
             }}
           />
           &nbsp;|&nbsp; Current time logged in Freshbook:
