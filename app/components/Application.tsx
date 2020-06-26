@@ -2,7 +2,8 @@ import {
   ClockCircleOutlined,
   PlusOutlined,
   SettingOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  CaretRightOutlined
 } from '@ant-design/icons';
 import {
   Alert,
@@ -12,7 +13,10 @@ import {
   Select,
   message,
   Tooltip,
-  Spin
+  Spin,
+  DatePicker,
+  Row,
+  Col
 } from 'antd';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
@@ -36,11 +40,11 @@ import {
   createTimeEntry,
   retrieveClients,
   Client,
-  ClientMap
+  ClientMap,
+  retrieveStaffData
 } from '../lib/freshbookClient';
 
 export const TEMP_ID_PREFIX = 'zzz-';
-const todaysDate = moment().format('MMMM Do, YYYY');
 
 function isValidUrl(urlString: string) {
   try {
@@ -53,6 +57,8 @@ function isValidUrl(urlString: string) {
 }
 
 function App() {
+  const [selectedDate, setSelectedDate] = useState<any>(moment());
+
   const [showSpinner, setShowSpinner] = useState<boolean>(true);
 
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -85,12 +91,14 @@ function App() {
     const filteredLocalStorageTimers = Object.keys({ ...localStorageTimers })
       .filter(
         key =>
-          localStorageTimers[key].date === moment().format('YYYY-MM-DD') ||
+          localStorageTimers[key].date === selectedDate.format('YYYY-MM-DD') ||
           localStorageTimers[key].unsavedChanges === true
       )
       .reduce((obj, key) => {
-        const objClone: any = { ...obj };
-        objClone[key] = localStorageTimers[key];
+        const objClone: TimerState = { ...obj };
+        const objTimerClone: TimerEntry = { ...localStorageTimers[key] };
+
+        objClone[key] = objTimerClone;
         return objClone;
       }, {});
 
@@ -111,9 +119,13 @@ function App() {
       setClientMap(clients);
       setProjecList(projects);
 
+      const staffData: any = await retrieveStaffData(apiURL, freshbookToken);
+
       tempTimerObj = await retrieveTimeEntries(
         apiURL,
         freshbookToken,
+        staffData.staff_id,
+        selectedDate,
         tempTimerObj
       );
     } catch (e) {
@@ -139,7 +151,7 @@ function App() {
     } else {
       setShowSpinner(false);
     }
-  }, [showSettings]);
+  }, [showSettings, selectedDate]);
 
   useInterval(() => {
     incrementTimer(timerObj, activeTimer, setTimerObj);
@@ -152,7 +164,7 @@ function App() {
     const newTempId = TEMP_ID_PREFIX + new Date().getTime().toString();
 
     console.log(newTempId);
-    setTimerObj(newTimer(timerObj, newTempId));
+    setTimerObj(newTimer(timerObj, newTempId, selectedDate));
     setActiveTimer(newTempId);
   };
 
@@ -286,6 +298,47 @@ function App() {
       ''
     );
 
+  let totalLoggedInFreshbook = 0;
+  let totalHours = 0;
+
+  Object.keys(timerObj).forEach(key => {
+    const timerEntryClone = { ...timerObj[key] };
+    if (
+      timerEntryClone.freshbooksId &&
+      timerEntryClone.countLoggedinFreshbook
+    ) {
+      totalLoggedInFreshbook += timerEntryClone.countLoggedinFreshbook / 3600;
+    }
+
+    if (timerEntryClone.roundedCount) {
+      totalHours += timerEntryClone.roundedCount / 3600;
+    }
+  });
+
+  const changeDateToTodayBtn = moment(
+    selectedDate.format('YYYY-MM-DD')
+  ).isBefore(moment().format('YYYY-MM-DD'), 'day') ? (
+    <Tooltip
+      placement="topLeft"
+      title="Update the date to today's date! Any unsaved timer will still be saved to the date the timer was initiated!"
+      key="dateToTodayToolTip"
+    >
+      <Button
+        size="small"
+        key="dateToToday"
+        type="primary"
+        onClick={() => {
+          setTimerObj({});
+          setSelectedDate(moment());
+        }}
+        icon={<CaretRightOutlined />}
+        shape="circle"
+      />
+    </Tooltip>
+  ) : (
+    ''
+  );
+
   return (
     <Spin spinning={showSpinner}>
       <Layout>
@@ -298,6 +351,7 @@ function App() {
         />
         <Layout.Content>
           <Card
+            size="small"
             title={<span>Freshbook Time Tracker </span>}
             extra={[
               <Tooltip
@@ -330,9 +384,26 @@ function App() {
               </Tooltip>
             ]}
           >
-            <h1 style={{ textAlign: 'center' }}>{todaysDate}</h1>
+            <Row>
+              <Col span={8} offset={8}>
+                <h1 style={{ textAlign: 'center' }}>
+                  {selectedDate.format('MMMM Do, YYYY')}
+                  {changeDateToTodayBtn}
+                </h1>
+              </Col>
+              <Col span={8}>
+                <div style={{ textAlign: 'right' }}>
+                  {totalLoggedInFreshbook}
+                  {' hours logged in Freshbook'}
+                  <br />
+                  {totalHours}
+                  {' Total Hours'}
+                </div>
+              </Col>
+            </Row>
 
             <Card
+              size="small"
               title={
                 <span>
                   <ClockCircleOutlined />

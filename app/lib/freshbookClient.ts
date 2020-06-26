@@ -43,9 +43,27 @@ export function openLinkToFreshbookEntry(
   shell.openExternal(entryURL);
 }
 
+export function retrieveStaffData(
+  apiUrl: string | undefined,
+  apiToken: string | undefined
+) {
+  return new Promise((resolve, reject) => {
+    const freshbooks = new FreshBooks(apiUrl, apiToken);
+
+    freshbooks.staff.current(function(err: any, result: any) {
+      if (err) {
+        reject(err);
+      }
+      resolve(result);
+    });
+  });
+}
+
 export function retrieveTimeEntries(
   apiUrl: string | undefined,
   apiToken: string | undefined,
+  staffId: string | undefined,
+  selectedDate: any,
   timerState: TimerState
 ): Promise<TimerState> {
   return new Promise((resolve, reject) => {
@@ -53,8 +71,9 @@ export function retrieveTimeEntries(
 
     freshbooks.time_entry.list(
       {
-        date_from: moment().format('YYYY-MM-DD'),
-        date_to: moment().format('YYYY-MM-DD')
+        date_from: selectedDate.format('YYYY-MM-DD'),
+        date_to: selectedDate.format('YYYY-MM-DD'),
+        per_page: 200
       },
       function(err: any, timeEntries: any, metaData: any) {
         if (err) {
@@ -66,6 +85,11 @@ export function retrieveTimeEntries(
 
         // eslint-disable-next-line no-restricted-syntax
         for (const entry of timeEntries) {
+          if (staffId !== entry.staff_id) {
+            // eslint-disable-next-line no-continue
+            continue;
+          }
+
           const localEntryData = timerEntryArray.find(
             ({ freshbooksId }) => freshbooksId === entry.time_entry_id
           );
@@ -221,7 +245,7 @@ export function retrieveProjects(
 
     const projectList: Project[] = [];
 
-    freshbooks.project.list({ per_page: 50 }, async function(
+    freshbooks.project.list({ per_page: 100 }, async function(
       err: any,
       projects: any,
       metaData: any
@@ -264,7 +288,8 @@ export function createTimeEntry(
         hours: timerEntry.roundedCount / 60 / 60,
         project_id: timerEntry.project,
         task_id: timerEntry.task,
-        notes: timerEntry.notes
+        notes: timerEntry.notes,
+        date: timerEntry.date
       },
       function(err: any, result: any) {
         if (err) {
