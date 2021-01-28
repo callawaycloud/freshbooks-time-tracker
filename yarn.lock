@@ -6008,10 +6008,10 @@ electron-updater@^4.2.0:
     pako "^1.0.10"
     semver "^6.3.0"
 
-electron@7.1.13:
-  version "7.1.13"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-7.1.13.tgz#f98838de70d74890cf639bbbbbe1f3b4b341ae78"
-  integrity sha512-WFfjhAG/B2iVjZcGoQkwkn/Zf1YN3U5Ux/hTcnANRiM6qPMAX23CINQC+vhlHspcjM9/jbF310fHCSrsXMGlAg==
+electron@9.4.0:
+  version "9.4.0"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-9.4.0.tgz#c3c607e3598226ddbaaff8babcdffa8bb2210936"
+  integrity sha512-hOC4q0jkb+UDYZRy8vrZ1IANnq+jznZnbkD62OEo06nU+hIbp2IrwDRBNuSLmQ3cwZMVir0WSIA1qEVK0PkzGA==
   dependencies:
     "@electron/get" "^1.0.1"
     "@types/node" "^12.0.12"
@@ -7109,7 +7109,7 @@ fresh@0.5.2:
   resolved "https://registry.yarnpkg.com/fresh/-/fresh-0.5.2.tgz#3d8cadd90d976569fa835ab1f8e4b23a105605a7"
   integrity sha1-PYyt2Q2XZWn6g1qx+OSyOhBWBac=
 
-freshbooks-api@valrustan/node-freshbooks-api, freshbooks-api@valrustan/node-freshbooks-api#43d95c9d21ab2c204489e87b9b30a9d33114dff8:
+freshbooks-api@valrustan/node-freshbooks-api:
   version "0.1.4"
   resolved "https://codeload.github.com/valrustan/node-freshbooks-api/tar.gz/43d95c9d21ab2c204489e87b9b30a9d33114dff8"
   dependencies:
